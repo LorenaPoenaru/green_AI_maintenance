@@ -1,2 +1,23 @@
 # green_AI_maintenance
-I created this repository such that we can work together on the sustainable model retraining project.
+I created this repository to work together on the sustainable model retraining project.
+
+# Description:
+We use in total 3 datasets, one is used to build disk failure prediction models (Backblaze), and the other two are used to build job failure prediction models (Google and Alibaba). We use 2 types of retraining from the data perspective, namely **sliding-window** in which we discard old data, and **full-history** in which we constantly enrich the training set with new data. We use 2 types of retraining from the retraining frequency perspective, namely **blind retraining**, in which the model is retrained periodically without checking whether there is drift, and **informed retraining** in which the model is retrained only when the drift is detected. For informed retraining, we experiment with 3 drift detectors:  
+
+- _KS on all features_ in which the distribution is estimated from all features used for training and testing, and then the KS statistical test is applied to the estimated distributions;
+- _KS on PCA features_ in which PCA is initially applied on the features to reduce their dimensionality, then the distribution is estimated from the PCA features used for training and testing, and then the KS statistical test is applied to the estimated distributions;
+- _KS on Important Features (FI)_ in which we only select the top most important features according to the model, then the distribution is estimated from the most important features used for training and testing, and then the KS statistical test is applied to the estimated distributions;
+ 
+# Results & Time Measuring
+What do I currently measure & store in the results data frame:
+
+1. Training Time - hyperparameter tunning time + time to fit the best configuration on the data
+2. Hyperparameter Tunning time - the time to find the right hyperparameters
+3. ROC_AUC + predictions + partial ROC_AUC per batch - to measure the performance of the models
+4. Drift Detection Time - the total drift detection time is measured including all the steps required to detect drift (Drift Detection Total Time).According to each drift detector, different steps are measured:
+
+- _KS on all features_ - we measure the time to estimate the distribution on all features (Distribution Extraction Time) + the time to apply the KS statistical test (Statistical Test Time)
+- _KS on PCA features_ - we measure the time to apply PCA on the features (PCA Computing Time) + the time to estimate the distribution on all features (Distribution Extraction Time) + the time to apply the KS statistical test (Statistical Test Time)
+- _KS on FI features_ - we measure the time to extract the most important features according to the model feature importance ranking (FI Extraction Time) + the time to estimate the distribution on all features (Distribution Extraction Time) + the time to apply the KS statistical test (Statistical Test Time)
+
+Results are stored in different CSV files from the folder 'results'.
