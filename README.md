@@ -23,3 +23,12 @@ What do I currently measure & store in the results data frame:
 - _KS on FI features_ - we measure the time to extract the most important features according to the model feature importance ranking (FI Extraction Time) + the time to estimate the distribution on all features (Distribution Extraction Time) + the time to apply the KS statistical test (Statistical Test Time)
 
 Results are stored in different CSV files from the folder 'results'. We experiment with 30 different random seeds for results consistency.
+
+# Requirements
+pandas == 2.0.2
+numpy == 1.25.1
+scikit-learn == 1.2.2
+scipy == 1.10.1
+seaborn == 0.12.2
+tqdm == 4.65.0
+matplotlib == 3.7.2
