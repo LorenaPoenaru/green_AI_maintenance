@@ -16,10 +16,10 @@ What do I currently measure & store in the results data frame:
 1. Training Time - hyperparameter tunning time + time to fit the best configuration on the data
 2. Hyperparameter Tunning time - the time to find the right hyperparameters
 3. ROC_AUC + predictions + partial ROC_AUC per batch - to measure the performance of the models
-4. Drift Detection Time - the total drift detection time is measured including all the steps required to detect drift (Drift Detection Total Time).According to each drift detector, different steps are measured:
+4. Drift Detection Time - the total drift detection time is measured including all the steps required to detect drift (Drift Detection Total Time). According to each drift detector, different steps are measured:
 
 - _KS on all features_ - we measure the time to estimate the distribution on all features (Distribution Extraction Time) + the time to apply the KS statistical test (Statistical Test Time)
 - _KS on PCA features_ - we measure the time to apply PCA on the features (PCA Computing Time) + the time to estimate the distribution on all features (Distribution Extraction Time) + the time to apply the KS statistical test (Statistical Test Time)
 - _KS on FI features_ - we measure the time to extract the most important features according to the model feature importance ranking (FI Extraction Time) + the time to estimate the distribution on all features (Distribution Extraction Time) + the time to apply the KS statistical test (Statistical Test Time)
 
-Results are stored in different CSV files from the folder 'results'.
+Results are stored in different CSV files from the folder 'results'. We experiment with 30 different random seeds for results consistency.
