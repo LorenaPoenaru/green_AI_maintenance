@@ -26,9 +26,21 @@ Results are stored in different CSV files from the folder 'results'. We experime
 
 # Requirements
 pandas == 2.0.2
+
 numpy == 1.25.1
+
 scikit-learn == 1.2.2
+
 scipy == 1.10.1
+
 seaborn == 0.12.2
+
 tqdm == 4.65.0
+
 matplotlib == 3.7.2
+
+# Running 
+
+`docker build -t ai_maintenance .`
+
+`docker run --rm -v /Users/june/Dev/Lorena_AI_Maintenance/results:/usr/src/app/results ai_maintenance GREEN_retraining_full_history_Backblaze.py`
