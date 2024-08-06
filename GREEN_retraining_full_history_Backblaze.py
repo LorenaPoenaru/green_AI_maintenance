@@ -993,10 +993,10 @@ def main():
             }
 
     N_WORKERS = 1
-    TOTAL_NUMBER_SEEDS = 2
+    TOTAL_NUMBER_SEEDS = 30
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
-    detections = ["KS-FI"] #"KS-PCA", "PeriodicModel",  "KS-ALL"]
+    detections = ["KS-FI", "KS-PCA", "PeriodicModel",  "KS-ALL"]
 
     counter = {}
     for detection in detections:
