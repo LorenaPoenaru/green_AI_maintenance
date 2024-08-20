@@ -26,7 +26,7 @@ RUN pip install \
     seaborn \
     tqdm
 
-COPY . /usr/src/app
+COPY *.py .
 
 ENTRYPOINT ["python"]
 CMD [""]
