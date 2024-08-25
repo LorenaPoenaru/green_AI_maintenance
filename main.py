@@ -1,6 +1,7 @@
 import numpy as np
 from helpers import *
-from sliding_window import *
+import sliding_window
+import full_history
 
 def main(): 
     dataset_name = "Backblaze"
@@ -26,12 +27,11 @@ def main():
             }
 
     N_WORKERS = 1
-    TOTAL_NUMBER_SEEDS = 1
+    TOTAL_NUMBER_SEEDS = 30
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
 
-    configurations = [("SlidingWindow","Static"), ("SlidingWindow","Periodic"), 
-    ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
+    configurations = [("FullHistory", "Periodic"), ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
 
     counter = {}
     for configuration in configurations:
@@ -58,6 +58,15 @@ def main():
                 sliding_window.pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
             if detection == "KS-FI":
                 sliding_window.pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
+        elif type_retraining_data == "FullHistory":
+            if detection == "Periodic":
+                full_history.pipeline_periodic_model(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
+            if detection == "KS-ALL":
+                full_history.pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
+            if detection == "KS-PCA":
+                full_history.pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
+            if detection == "KS-FI":
+                full_history.pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
         counter[configuration] -= 1
     print("End of Experimentation")
 

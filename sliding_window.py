@@ -34,12 +34,12 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
     experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
     
     total_time_training = 0
-    predictions_test_sw = []
-    lengths_training_sw = []
-    partial_roc_auc_sw = []
-    total_train_sw = 0 
-    total_hyperparam_sw = 0
-    total_test_sw = 0
+    predictions_test_fh = []
+    lengths_training_fh = []
+    partial_roc_auc_fh = []
+    total_train_fh = 0 
+    total_hyperparam_fh = 0
+    total_test_fh = 0
     
     ### Tracker tasks variables 
     tracker = EmissionsTracker(project_name="AI_maintenance_" + str(experiment_name))
@@ -79,7 +79,7 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
         partial_roc_auc_fh.append(roc_auc_score(testing_labels, predictions_test_updated))
         predictions_test_fh = np.concatenate([predictions_test_fh, predictions_test_updated])
         training_features = np.vstack(feature_list[0: batch+1])
-        lengths_training_sw.append(len(training_features))
+        lengths_training_fh.append(len(training_features))
         training_labels = np.hstack(label_list[0: batch+1])
 
     end_total_fh = time.time() - begin_total_fh
@@ -536,7 +536,7 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
     'CPU_Energy_FI', 'GPU_Energy_FI', 'RAM_Energy_FI', 'Duration_Tracker_FI']
     values= [random_seed, 'KS_FI', str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), partial_roc_auc_ks_fi_model, np.mean(partial_roc_auc_ks_fi_model), 
     roc_auc_score(true_testing_labels, predictions_test_ks_fi_model), predictions_test_ks_fi_model, true_testing_labels, 
-    total_train_sw_fi, total_hyperparam_sw_ks_fi, total_test_time_ks_fi, detected_drifts, total_drift_detection_time, total_feature_importance_extraction_time, 
+    total_train_fi, total_hyperparam_ks_fi, total_test_time_ks_fi, detected_drifts, total_drift_detection_time, total_feature_importance_extraction_time, 
     total_distribution_extraction_time, total_stat_test_time, necessary_label_annotation_effort,
     total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'],    
     total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
