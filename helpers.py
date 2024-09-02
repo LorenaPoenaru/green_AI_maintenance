@@ -160,7 +160,7 @@ def distribution_extraction(reference_data, testing_data, dataset_name, type_ret
 def ks_stats(dataset_name, type_retraining_data, detection, random_seed, batch, distribution_reference, distribution_test, total_stats_tracker_values, tracker):
     tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "KS_Stats", random_seed, batch))   
     stat_test = stats.kstest
-    v, p = stat_test(distribution_reference, distribution_test) ### Stats Test Energy stop HERE!!!!!!!
+    v, p = stat_test(distribution_reference, distribution_test)
     stats_emissions = tracker.stop_task()
     total_stats_tracker_values['cpu'] += stats_emissions.cpu_energy
     total_stats_tracker_values['gpu'] += stats_emissions.gpu_energy
