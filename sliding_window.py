@@ -119,7 +119,7 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     training_features = scaler.fit_transform(training_features)
 
     # downsampling training data
-    training_features_downsampling, training_labels_downsampling = downsampling(training_features, training_labels, random_seed)
+    training_features, training_labels = downsampling(training_features, training_labels, random_seed)
 
 
     begin_train_time_static = time.time()
@@ -171,6 +171,80 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
     store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
     _ = tracker.stop()
+
+
+
+
+
+def pipeline_static_model_debug(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
+    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
+
+    begin_total_static = time.time()
+    partial_roc_auc = []
+    total_test_static = 0
+
+    # extracting training features and labels
+    training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
+
+    # scaling training data
+    scaler = StandardScaler()
+    training_features = scaler.fit_transform(training_features)
+
+    # downsampling training data
+    training_features_downsampling, training_labels_downsampling = downsampling(training_features, training_labels, random_seed, ratio=10)
+
+    # training model
+    begin_train_time_static = time.time()
+        
+    begin_hyperparam_tunning_static = time.time()
+
+    update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, detection, random_seed, batch, param_dist_rf, N_ITER_SEARCH, training_features_downsampling, training_labels_downsampling, total_hyperparam_tracker_values, tracker)
+    
+    end_hyperparam_tunning_static = time.time() - begin_hyperparam_tunning_static
+    
+    print('Training')
+    update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
+    end_train_time_static = time.time() - begin_train_time_static
+    #print('Training time: ', end_train_time_static)
+
+    total_time_training = 0
+    predictions_test_static_model = []
+
+
+
+    print('Testing model on periods')
+    begin_test_time_static = time.time()
+    for i in tqdm(range(num_chunks//2, num_chunks)):
+
+        # obtain testing features and labels
+        testing_features = feature_list[i]
+        testing_labels = label_list[i]
+
+        # scaling testing features
+        testing_features = scaler.transform(testing_features)
+
+        # evaluate model on testing data
+        begin_test_time_static = time.time()
+        predictions_test_updated = update_model.predict(testing_features)
+        end_test_time_static = time.time() - begin_test_time_static
+        total_test_static = total_test_static + end_test_time_static
+
+        partial_roc_auc.append(roc_auc_score(testing_labels, predictions_test_updated))
+
+        predictions_test_static_model = np.concatenate([predictions_test_static_model, predictions_test_updated])
+
+
+
+
+    end_total_static = time.time() - begin_total_static
+    
+    df_results_static_rf = pd.DataFrame(columns=['Random_Seed', 'Model', 'Drifts', 'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 'ROC_AUC_Total', 'Predictions', 'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 'Test_Time', 'Drifts_Detected', 'Label_Costs'])
+    df_results_static_rf.loc[0] = [random_seed, 'static', '0/' + str(int(num_chunks//2)), partial_roc_auc, np.mean(partial_roc_auc), roc_auc_score(true_testing_labels, predictions_test_static_model), predictions_test_static_model, true_testing_labels, end_train_time_static, end_hyperparam_tunning_static, total_test_static, np.zeros(int(num_chunks//2), dtype=int), 0.0]
+
+    df_results_disk = pd.concat([df_results_disk, df_results_static_rf])
+    df_results_disk = df_results_disk.reset_index(drop=True)
+    df_results_disk.to_csv('./results/static_model_backblaze_data_green.csv')
+
 
 
 def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
