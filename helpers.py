@@ -140,6 +140,10 @@ def features_labels_preprocessing(DATASET_PATH, dataset):
         print('Features and Labels Computing')
         # features and labels extraction and computation
         feature_list, label_list = obtain_natural_chunks(features, labels, obtain_intervals('g'))
+    elif(dataset=='a'):
+        df = pd.read_csv(DATASET_PATH)
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+        feature_list, label_list = obtain_period_data('a')    
     else:
         print('Incorrect Dataset')
     return feature_list, label_list
@@ -183,7 +187,7 @@ def ks_drift_detection(dataset_name, type_retraining_data, detection, random_see
 
     distribution_extraction_time_end = time.time() - distribution_extraction_time_start
     # apply KS statistical test
-    ks_test_time_start = time.time() ### Stats Test Energy start HERE!!!!!!!
+    ks_test_time_start = time.time()
     p, total_stats_tracker_values = ks_stats(dataset_name, type_retraining_data, detection, random_seed, batch, distribution_reference, distribution_test, total_stats_tracker_values, tracker)
     ks_test_time_end = time.time() - ks_test_time_start
     # check if drift

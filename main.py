@@ -5,6 +5,7 @@ import full_history
 
 BACKBLAZE = "Backblaze"
 GOOGLE = "Google"
+ALIBABA = "Alibaba"
 
 
 
@@ -16,6 +17,9 @@ def main():
     elif dataset_name == GOOGLE:
         DATASET_PATH_DISK = "./google_job_failure.csv"
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'g')
+    elif dataset_name == ALIBABA:
+        DATASET_PATH_DISK = "./alibaba_job_data.csv"
+        feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'a')        
     print(DATASET_PATH_DISK)
     num_chunks = len(feature_list)
     true_testing_labels = np.hstack(label_list[num_chunks//2:])
@@ -39,7 +43,7 @@ def main():
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
 
-    configurations = [("FullHistory", "Periodic")] # , ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
+    configurations = [("FullHistory", "Periodic"), ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
     counter = {}
     for configuration in configurations:
         counter[configuration] = TOTAL_NUMBER_SEEDS

@@ -109,7 +109,8 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
         # training model
         begin_train_fh = time.time()
         # Hyperparameter tunning energy collection start
@@ -153,7 +154,7 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
     'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
     'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
     'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing']
-    values =  [random_seed, 'periodic-sw', str(int(num_chunks//2)) + '/' + str(int(num_chunks//2)), 
+    values =  [random_seed, type_retraining_data+"_"+detection, str(int(num_chunks//2)) + '/' + str(int(num_chunks//2)), 
     partial_roc_auc_fh, np.mean(partial_roc_auc_fh), roc_auc_score(true_testing_labels, predictions_test_fh), 
     predictions_test_fh, true_testing_labels,  total_train_fh, total_hyperparam_fh, total_test_fh, np.ones(int(num_chunks//2), dtype=int), 
     len(true_testing_labels),
@@ -205,7 +206,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
         # training model
         begin_train_fh_ks_all = time.time()
         if(batch==num_chunks//2 or need_to_retrain == 1):
@@ -269,7 +271,7 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
                      'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
                      'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test'
                      ]
-    values = [random_seed, detection, str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), partial_roc_auc_ks_all_model, 
+    values = [random_seed, type_retraining_data+"_"+detection, str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), partial_roc_auc_ks_all_model, 
               np.mean(partial_roc_auc_ks_all_model), roc_auc_score(true_testing_labels, predictions_test_ks_all_model), 
               predictions_test_ks_all_model, true_testing_labels, total_train_fh_all, total_hyperparam_fh_ks_all, 
               total_test_time_ks_all, detected_drifts, total_drift_detection_time, total_distribution_extraction_time, 
@@ -323,7 +325,8 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
     
         begin_train_fh_ks_pca = time.time()
         if(batch==num_chunks//2 or need_to_retrain == 1):
@@ -404,7 +407,7 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
     'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test',
     'CPU_Energy_PCA', 'GPU_Energy_PCA', 'RAM_Energy_PCA', 'Duration_Tracker_PCA']
-    values=[random_seed, 'KS_PCA', str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), 
+    values=[random_seed, type_retraining_data+"_"+detection, str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), 
     partial_roc_auc_ks_pca_model, np.mean(partial_roc_auc_ks_pca_model), 
     roc_auc_score(true_testing_labels, predictions_test_ks_pca_model), 
     predictions_test_ks_pca_model, true_testing_labels, total_train_fh_pca, 
@@ -459,7 +462,8 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
 
         # training model
         begin_train_fh_ks_fi = time.time()
@@ -490,10 +494,9 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         predictions_test_ks_fi_model = np.concatenate([predictions_test_ks_fi_model, predictions_test_updated])
         
 
-#         # Drift Detection
+         # Drift Detection
         
         need_to_retrain = 0
-    
         drift_time_start = time.time()
         # Extract Most Important Features
         feature_importance_extraction_start = time.time()  
@@ -501,7 +504,7 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         feature_importance_extraction_end = time.time() - feature_importance_extraction_start
         
         
-#         # Detect Drift
+        # Detect Drift
 
         drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(dataset_name, type_retraining_data, detection, random_seed, batch, training_important_features_model, testing_important_features_model, total_distribution_tracker_values, total_stats_tracker_values, tracker)
         drift_time_end = time.time() - drift_time_start
@@ -542,7 +545,7 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
     'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
     'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test',
     'CPU_Energy_FI', 'GPU_Energy_FI', 'RAM_Energy_FI', 'Duration_Tracker_FI']
-    values= [random_seed, 'KS_FI', str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), 
+    values= [random_seed, type_retraining_data+"_"+detection, str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), 
     partial_roc_auc_ks_fi_model, np.mean(partial_roc_auc_ks_fi_model), roc_auc_score(true_testing_labels, 
     predictions_test_ks_fi_model), predictions_test_ks_fi_model, true_testing_labels, total_train_fh_fi, 
     total_hyperparam_fh_ks_fi, total_test_time_ks_fi, detected_drifts, total_drift_detection_time, total_feature_importance_extraction_time, 
