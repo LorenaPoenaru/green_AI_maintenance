@@ -185,6 +185,8 @@ def pipeline_static_model_debug(dataset_name, type_retraining_data, detection, r
 
     # extracting training features and labels
     training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
+    tracker = EmissionsTracker(project_name="AI_maintenance_" + str(experiment_name))
+    total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values = initiate_tracker_variables()
 
     # scaling training data
     scaler = StandardScaler()
@@ -198,52 +200,54 @@ def pipeline_static_model_debug(dataset_name, type_retraining_data, detection, r
         
     begin_hyperparam_tunning_static = time.time()
 
-    update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, detection, random_seed, batch, param_dist_rf, N_ITER_SEARCH, training_features_downsampling, training_labels_downsampling, total_hyperparam_tracker_values, tracker)
+    update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, detection, random_seed, "Static", param_dist_rf, N_ITER_SEARCH, training_features_downsampling, training_labels_downsampling, total_hyperparam_tracker_values, tracker)
     
     end_hyperparam_tunning_static = time.time() - begin_hyperparam_tunning_static
     
     print('Training')
-    update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
+    update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, "Static", update_model, training_features_downsampling, training_labels_downsampling, total_fit_tracker_values, tracker)
     end_train_time_static = time.time() - begin_train_time_static
     #print('Training time: ', end_train_time_static)
 
     total_time_training = 0
     predictions_test_static_model = []
-
-
-
-    print('Testing model on periods')
     begin_test_time_static = time.time()
-    for i in tqdm(range(num_chunks//2, num_chunks)):
+    for batch in tqdm(range(num_chunks//2, num_chunks)):
 
         # obtain testing features and labels
-        testing_features = feature_list[i]
-        testing_labels = label_list[i]
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
 
         # scaling testing features
         testing_features = scaler.transform(testing_features)
 
         # evaluate model on testing data
         begin_test_time_static = time.time()
-        predictions_test_updated = update_model.predict(testing_features)
+        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker)
         end_test_time_static = time.time() - begin_test_time_static
         total_test_static = total_test_static + end_test_time_static
 
         partial_roc_auc.append(roc_auc_score(testing_labels, predictions_test_updated))
-
         predictions_test_static_model = np.concatenate([predictions_test_static_model, predictions_test_updated])
-
-
 
 
     end_total_static = time.time() - begin_total_static
     
-    df_results_static_rf = pd.DataFrame(columns=['Random_Seed', 'Model', 'Drifts', 'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 'ROC_AUC_Total', 'Predictions', 'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 'Test_Time', 'Drifts_Detected', 'Label_Costs'])
-    df_results_static_rf.loc[0] = [random_seed, 'static', '0/' + str(int(num_chunks//2)), partial_roc_auc, np.mean(partial_roc_auc), roc_auc_score(true_testing_labels, predictions_test_static_model), predictions_test_static_model, true_testing_labels, end_train_time_static, end_hyperparam_tunning_static, total_test_static, np.zeros(int(num_chunks//2), dtype=int), 0.0]
+    columns_names =['Random_Seed', 'Model', 'Drifts', 'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 'ROC_AUC_Total', 'Predictions', 
+    'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 'Test_Time', 'Drifts_Detected', 'Label_Costs',
+    'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
+    'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
+    'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing']
+    values = [random_seed, 'static', '0/' + str(int(num_chunks//2)), partial_roc_auc, np.mean(partial_roc_auc), roc_auc_score(true_testing_labels, 
+    predictions_test_static_model), predictions_test_static_model, true_testing_labels, end_train_time_static, end_hyperparam_tunning_static, 
+    total_test_static, np.zeros(int(num_chunks//2), dtype=int), 0.0,
+    total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
+    total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
+    total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration']]
 
-    df_results_disk = pd.concat([df_results_disk, df_results_static_rf])
-    df_results_disk = df_results_disk.reset_index(drop=True)
-    df_results_disk.to_csv('./results/static_model_backblaze_data_green.csv')
+    df_results_for_seed = format_data_for_the_seed(columns_names, values)
+    store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
+    _ = tracker.stop()
 
 
 
