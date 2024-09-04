@@ -43,4 +43,4 @@ matplotlib == 3.7.2
 
 `docker build -t ai_maintenance .`
 
-`docker run --rm -v /Users/june/Dev/Lorena_AI_Maintenance/results:/usr/src/app/results ai_maintenance GREEN_retraining_full_history_Backblaze.py`
+`docker run --rm -v <path to the project's folder>/results:/usr/src/app/results ai_maintenance main.py`

@@ -84,55 +84,34 @@ def get_predictions(dataset_name, type_retraining_data, detection, random_seed, 
     total_testing_tracker_values['duration'] += testing_emissions.duration
     return predictions_test_updated, total_testing_tracker_values
 
-def initiate_tracker_var():
-    return {'cpu': 0, 'gpu': 0, 'ram':0, 'duration':0}
-
-def initiate_tracker_variables():    
-    total_hyperparam_tracker_values = initiate_tracker_var()
-    total_fit_tracker_values = initiate_tracker_var()
-    total_testing_tracker_values = initiate_tracker_var()
-    return total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values
-
 
 
 def pipeline_periodic_model(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
-    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
+    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed)
     
     total_time_training = 0
     predictions_test_fh = []
     partial_roc_auc_fh = []
-
     total_train_fh = 0 
     total_hyperparam_fh = 0
     total_test_fh = 0
-    length_training_fh = 0
-
-    begin_total_fh = time.time()
-
-
-
+    
     ### Tracker tasks variables 
     tracker = EmissionsTracker(project_name="AI_maintenance_" + str(experiment_name))
     total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values = initiate_tracker_variables()
     
+    begin_total_fh = time.time()
     training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
 
     for batch in tqdm(range(num_chunks//2, num_chunks)):
-
         # obtain features and labels
         testing_features, testing_labels = get_testing_features_and_labels_from_lists(feature_list, label_list, batch)
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
         training_features, training_labels = downsampling(training_features, training_labels, random_seed)
-
-        length_training_fh = length_training_fh + len(training_features)
         # training model
         begin_train_fh = time.time()
-
-
-
-
         # Hyperparameter tunning energy collection start
         begin_hyperparam_tunning_update = time.time()
         update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
@@ -164,8 +143,7 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
 
         training_features = np.vstack(feature_list[0: batch+1])
         training_labels = np.hstack(label_list[0: batch+1])
-        
-        print('Length of Training', length_training_fh)
+
 
     end_total_fh = time.time() - begin_total_fh
     
@@ -184,7 +162,7 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
     total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration']
     ]
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
-    store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
+    store_into_file('./results/Output_' + str(experiment_name) + ".csv", df_results_for_seed)
     _ = tracker.stop()
 
 
@@ -192,9 +170,8 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
 
 # # # Build Drift Detection based Model Update
 # # ### KS on all features
-
 def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
-    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
+    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) 
 
     necessary_label_annotation_effort = 0
     total_time_training = 0
@@ -219,7 +196,6 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
 
     training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
     current_training_batches_list = initial_training_batches_list.copy()
-    print('Initial Training Batches', current_training_batches_list)
     #need_to_retrain = 0
     for batch in tqdm(range(num_chunks//2, num_chunks)):     
         # init drift alert
@@ -256,9 +232,7 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         partial_roc_auc_ks_all_model.append(roc_auc_score(testing_labels, predictions_test_updated)) 
         predictions_test_ks_all_model = np.concatenate([predictions_test_ks_all_model, predictions_test_updated])
         
-        
         # Drift Detection
-        
         need_to_retrain = 0        
         
         drift_time_start = time.time()
@@ -272,10 +246,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         detected_drifts.append(drift_alert)
                 
         if(drift_alert==1):
-        
             need_to_retrain = 1
             drift_alert = 0
-
             no_necessary_retrainings = no_necessary_retrainings + 1
             necessary_label_annotation_effort = necessary_label_annotation_effort + len(testing_labels)
 
@@ -309,31 +281,25 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
               total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration']]
     
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
-    store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
+    store_into_file('./results/Output_' + str(experiment_name) + ".csv", df_results_for_seed)
     _ = tracker.stop()
     
 
 
 def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
-    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
+    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) 
 
-#     print('Random Seed:', random_seed)
     necessary_label_annotation_effort = 0
     no_necessary_retrainings = 0
-    
     partial_roc_auc_ks_pca_model = []
     predictions_test_ks_pca_model = []
-
     total_train_fh_pca = 0
     total_hyperparam_fh_ks_pca = 0
     total_test_time_ks_pca = 0
-    
     total_drift_detection_time = 0
     total_distribution_extraction_time = 0
     total_stat_test_time = 0
     total_pca_time = 0
-    
-    
     detected_drifts = []
 
 
@@ -360,8 +326,6 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         training_features, training_labels = downsampling(training_features, training_labels, random_seed)
     
         begin_train_fh_ks_pca = time.time()
-
-
         if(batch==num_chunks//2 or need_to_retrain == 1):
             begin_train_fh_ks_pca = time.time()
             begin_hyperparam_tunning_update = time.time()
@@ -375,7 +339,6 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
             total_hyperparam_fh_ks_pca = total_hyperparam_fh_ks_pca + end_hyperparam_tunning_update
             
             update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
-
             end_train_fh_ks_pca = time.time() - begin_train_fh_ks_pca
             total_train_fh_pca = total_train_fh_pca + end_train_fh_ks_pca
         
@@ -393,12 +356,10 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         predictions_test_ks_pca_model = np.concatenate([predictions_test_ks_pca_model, predictions_test_updated])
         
         # Drift Detection
-        
         need_to_retrain = 0
         drift_time_start = time.time()
         
         # Extract PCA Features
-        
         pca_computing_time_start = time.time()
         df_train_features_sorted_pca, df_test_features_sorted_pca, total_pca_tracker_values =run_pca(dataset_name, type_retraining_data, detection, random_seed, batch, training_features, testing_features, total_pca_tracker_values, tracker)
         pca_computing_time_end = time.time() - pca_computing_time_start
@@ -418,16 +379,12 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         
             need_to_retrain = 1
             drift_alert = 0
-
-
             no_necessary_retrainings = no_necessary_retrainings + 1
             necessary_label_annotation_effort = necessary_label_annotation_effort + len(testing_labels)
 
-            
             # add new data to the training for full history approach
             current_training_batches_list.append(batch)
                     
-            
             training_features_list_updated = [feature_list[i] for i in current_training_batches_list]
             training_labels_list_updated = [label_list[i] for i in current_training_batches_list]
         
@@ -462,30 +419,25 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     total_pca_tracker_values['cpu'], total_pca_tracker_values['gpu'], total_pca_tracker_values['ram'], total_pca_tracker_values['duration']]
 
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
-    store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
+    store_into_file('./results/Output_' + str(experiment_name) + ".csv", df_results_for_seed)
     _ = tracker.stop()
     
 
 
 def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
-    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
+    experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) 
 
     no_necessary_retrainings = 0
     necessary_label_annotation_effort = 0
-    
     partial_roc_auc_ks_fi_model = []    
     predictions_test_ks_fi_model = []
-    
     total_train_fh_fi = 0
     total_hyperparam_fh_ks_fi = 0
     total_test_time_ks_fi = 0
-    
     total_feature_importance_extraction_time = 0
     total_distribution_extraction_time = 0
     total_stat_test_time = 0
-    
     total_drift_detection_time = 0
-
     detected_drifts = []
 
     ### Tracker tasks variables 
@@ -511,10 +463,7 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
 
         # training model
         begin_train_fh_ks_fi = time.time()
-
-
         if(batch==num_chunks//2 or need_to_retrain == 1):
- 
             begin_train_fh_ks_fi = time.time()
             begin_hyperparam_tunning_update = time.time()
             update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
@@ -526,7 +475,6 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
             total_hyperparam_fh_ks_fi = total_hyperparam_fh_ks_fi + end_hyperparam_tunning_update
             
             update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
-            
             end_train_fh_ks_fi = time.time() - begin_train_fh_ks_fi
             total_train_fh_fi = total_train_fh_fi + end_train_fh_ks_fi
         
@@ -607,65 +555,6 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
     total_fi_tracker_values['cpu'], total_fi_tracker_values['gpu'], total_fi_tracker_values['ram'], total_fi_tracker_values['duration']]
     
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
-    store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
+    store_into_file('./results/Output_' + str(experiment_name) + ".csv", df_results_for_seed)
     _ = tracker.stop()
     
-
-
-def main(): 
-    dataset_name = "Backblaze"
-    type_retraining_data = "FullHistory"
-    DATASET_PATH_DISK = "./disk_2015_complete.csv"
-    print(DATASET_PATH_DISK)
-    feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'b')
-    num_chunks = len(feature_list)
-    true_testing_labels = np.hstack(label_list[num_chunks//2:])
-    initial_training_batches_list = list(range(0, num_chunks//2))
-    features_disk_failure = ['smart_1_raw', 'smart_4_raw', 'smart_5_raw', 'smart_7_raw', 'smart_9_raw', 'smart_12_raw', 'smart_187_raw', 'smart_193_raw', 'smart_194_raw', 'smart_197_raw', 'smart_199_raw', 
-                         'smart_4_raw_diff', 'smart_5_raw_diff', 'smart_9_raw_diff', 'smart_12_raw_diff', 'smart_187_raw_diff', 'smart_193_raw_diff', 'smart_197_raw_diff', 'smart_199_raw_diff']
-
-
-    # Hyperparameter tuning parameter
-    param_dist_rf = {
-                'n_estimators': stats.randint(1e1, 1e2),
-                'criterion': ['gini', 'entropy'],
-                'max_features': ['sqrt', 'log2'],
-                'max_depth': [int(x) for x in np.linspace(10, 110, num=6)] + [None],
-                'min_samples_leaf': [1, 2, 4],
-                'min_samples_split': [2, 4, 8],
-                'class_weight':['balanced', None],
-                'bootstrap': [True, False]
-            }
-
-    N_WORKERS = 1
-    TOTAL_NUMBER_SEEDS = 1
-    random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
-    N_ITER_SEARCH = 100
-    detections = ["PeriodicModel"]
-
-    counter = {}
-    for detection in detections:
-        counter[detection] = TOTAL_NUMBER_SEEDS
-
-
-    executions = detections * TOTAL_NUMBER_SEEDS
-    random.shuffle(executions)
-    print(executions)
-
-    for detection in executions:
-        print(detection)
-        random_seed = random_seeds[counter[detection]-1]
-        if detection == "PeriodicModel":
-            pipeline_periodic_model(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
-        if detection == "KS-ALL":
-            pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
-        if detection == "KS-PCA":
-            pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
-        if detection == "KS-FI":
-            pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)
-        counter[detection] -= 1
-    print("End of Experimentation")
-
-
-if __name__ == "__main__":
-    main()

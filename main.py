@@ -3,17 +3,25 @@ from helpers import *
 import sliding_window
 import full_history
 
+BACKBLAZE = "Backblaze"
+GOOGLE = "Google"
+
+
+
 def main(): 
-    dataset_name = "Backblaze"
-    DATASET_PATH_DISK = "./disk_2015_complete.csv"
+    dataset_name = GOOGLE
+    if dataset_name == BACKBLAZE:
+        DATASET_PATH_DISK = "./disk_2015_complete.csv"
+        feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'b')
+    elif dataset_name == GOOGLE:
+        DATASET_PATH_DISK = "./google_job_failure.csv"
+        feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'g')
     print(DATASET_PATH_DISK)
-    feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'b')
     num_chunks = len(feature_list)
     true_testing_labels = np.hstack(label_list[num_chunks//2:])
     initial_training_batches_list = list(range(0, num_chunks//2))
     features_disk_failure = ['smart_1_raw', 'smart_4_raw', 'smart_5_raw', 'smart_7_raw', 'smart_9_raw', 'smart_12_raw', 'smart_187_raw', 'smart_193_raw', 'smart_194_raw', 'smart_197_raw', 'smart_199_raw', 
                          'smart_4_raw_diff', 'smart_5_raw_diff', 'smart_9_raw_diff', 'smart_12_raw_diff', 'smart_187_raw_diff', 'smart_193_raw_diff', 'smart_197_raw_diff', 'smart_199_raw_diff']
-
     # Hyperparameter tuning parameter
     param_dist_rf = {
                 'n_estimators': stats.randint(1e1, 1e2),
@@ -27,17 +35,14 @@ def main():
             }
 
     N_WORKERS = 1
-    TOTAL_NUMBER_SEEDS = 30
+    TOTAL_NUMBER_SEEDS = 1
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
 
-    configurations = [("FullHistory", "Periodic"), ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
-
+    configurations = [("FullHistory", "Periodic")] # , ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
     counter = {}
     for configuration in configurations:
         counter[configuration] = TOTAL_NUMBER_SEEDS
-
-
     executions = configurations * TOTAL_NUMBER_SEEDS
     random.shuffle(executions)
     print(executions)
