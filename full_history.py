@@ -26,6 +26,11 @@ from codecarbon import EmissionsTracker
 from helpers import *
 
 
+BACKBLAZE = "Backblaze"
+GOOGLE = "Google"
+ALIBABA = "Alibaba"
+
+
 def hyperparameter_tuning_process(dataset_name, type_retraining_data, detection, random_seed, batch, param_dist_rf, N_ITER_SEARCH, training_features_downsampling, training_labels_downsampling, total_hyperparam_tracker_values, tracker):
     tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "HyperparameterTuning", random_seed, batch))
     model = RandomForestClassifier(random_state = random_seed)

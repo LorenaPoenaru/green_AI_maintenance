@@ -22,8 +22,12 @@ import random
 #Energy Measurement Tool
 from codecarbon import EmissionsTracker
 
-
 from helpers import *
+
+BACKBLAZE = "Backblaze"
+GOOGLE = "Google"
+ALIBABA = "Alibaba"
+
 
 def get_scaled_transformation_testing_features(scaler, testing_features):
     return scaler.transform(testing_features)
