@@ -82,9 +82,9 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
 
         partial_roc_auc_fh.append(roc_auc_score(testing_labels, predictions_test_updated))
         predictions_test_fh = np.concatenate([predictions_test_fh, predictions_test_updated])
-        training_features = np.vstack(feature_list[0: batch+1])
-        lengths_training_fh.append(len(training_features))
-        training_labels = np.hstack(label_list[0: batch+1])
+        training_features = np.vstack(feature_list[batch + 1 - num_chunks//2: batch+1])
+        training_labels = np.hstack(label_list[batch + 1 - num_chunks//2: batch+1])
+
 
     end_total_fh = time.time() - begin_total_fh
     
