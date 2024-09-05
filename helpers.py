@@ -19,6 +19,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV
 import time
 import random
+from utilities import obtain_period_data, obtain_metrics
+
 
 def obtain_intervals(dataset):
     '''
