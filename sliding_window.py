@@ -56,7 +56,8 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
         # training model
         begin_train_fh = time.time()
         # Hyperparameter tunning energy collection start
@@ -123,7 +124,8 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     training_features = scaler.fit_transform(training_features)
 
     # downsampling training data
-    training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+    if dataset_name != ALIBABA:
+        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
 
 
     begin_train_time_static = time.time()
@@ -197,7 +199,8 @@ def pipeline_static_model_debug(dataset_name, type_retraining_data, detection, r
     training_features = scaler.fit_transform(training_features)
 
     # downsampling training data
-    training_features_downsampling, training_labels_downsampling = downsampling(training_features, training_labels, random_seed, ratio=10)
+    if dataset_name != ALIBABA:
+        training_features_downsampling, training_labels_downsampling = downsampling(training_features, training_labels, random_seed, ratio=10)
 
     # training model
     begin_train_time_static = time.time()
@@ -291,7 +294,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
         # training model
         begin_train_ks_all = time.time()
         if(batch==num_chunks//2 or need_to_retrain == 1):
@@ -404,7 +408,8 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
     
         begin_train_ks_pca = time.time()
 
@@ -539,7 +544,8 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         # scaling data
         training_features, testing_features = scaling_data(training_features, testing_features)
         # Downscaling for data training
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        if dataset_name != ALIBABA:
+            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
 
         # training model
         begin_train_ks_fi = time.time()

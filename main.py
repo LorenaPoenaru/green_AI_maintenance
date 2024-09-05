@@ -26,8 +26,7 @@ def main():
     elif dataset_name == ALIBABA:
         DATASET_PATH_DISK = "./alibaba_job_data.csv"
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'a')
-        features_failure = ['user', 'task_name', 'inst_num', 'plan_cpu', 'plan_mem', 'plan_gpu', 
-        'cpu_usage', 'gpu_wrk_util', 'avg_mem', 'max_mem', 'avg_gpu_wrk_mem', 'max_gpu_wrk_mem']
+        features_failure = ['user', 'task_name', 'inst_num', 'plan_cpu', 'plan_mem', 'plan_gpu', 'cpu_usage', 'gpu_wrk_util', 'avg_mem', 'max_mem', 'avg_gpu_wrk_mem', 'max_gpu_wrk_mem']
 
     print(DATASET_PATH_DISK)
     num_chunks = len(feature_list)
