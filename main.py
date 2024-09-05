@@ -11,7 +11,7 @@ ALIBABA = "Alibaba"
 
 
 def main():
-    dataset_name = BACKBLAZE
+    dataset_name = GOOGLE
     if dataset_name == BACKBLAZE:
         DATASET_PATH_DISK = "./disk_2015_complete.csv"
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'b')
@@ -20,7 +20,7 @@ def main():
     elif dataset_name == GOOGLE:
         DATASET_PATH_DISK = "./google_job_failure.csv"
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'g')
-        features_job_failure = ['User ID', 'Job Name', 'Scheduling Class',
+        features_failure = ['User ID', 'Job Name', 'Scheduling Class',
                    'Num Tasks', 'Priority', 'Diff Machine', 'CPU Requested', 'Mem Requested', 'Disk Requested',
                    'Avg CPU', 'Avg Mem', 'Avg Disk', 'Std CPU', 'Std Mem', 'Std Disk']
     elif dataset_name == ALIBABA:
