@@ -19,7 +19,43 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV
 import time
 import random
-from utilities import obtain_period_data, obtain_metrics
+
+
+def obtain_metrics(labels, probas):
+    '''
+    Calculate performance on various metrics
+
+    Args: 
+        labels (np.array): labels of samples, should be True/False
+        probas (np.array): predicted probabilities of samples, should be in [0, 1]
+            and should be generated with predict_proba()[:, 1]
+    Returns:
+        (list): [ Precision, Recall, Accuracy, F-Measure, AUC, MCC, Brier Score ]
+    '''
+    ret = []
+    preds = probas > 0.5
+    auc = metrics.roc_auc_score(labels, probas)
+    ret.append(metrics.precision_score(labels, preds))
+    ret.append(metrics.recall_score(labels, preds))
+    ret.append(metrics.accuracy_score(labels, preds))
+    ret.append(metrics.f1_score(labels, preds))
+    ret.append(np.max(auc, 1.0 - auc))
+    ret.append(metrics.matthews_corrcoef(labels, preds))
+    ret.append(metrics.brier_score_loss(labels, probas))
+
+    return ret
+
+def obtain_period_data(dataset):
+    features, labels = obtain_data(dataset, 'm')
+    terminals = obtain_intervals(dataset)
+    feature_list = []
+    label_list = []
+
+    for i in range(len(terminals) - 1):
+        idx = np.logical_and(features[:, 0] >= terminals[i], features[:, 0] < terminals[i + 1])
+        feature_list.append(features[idx][:, 1:])
+        label_list.append(labels[idx])
+    return feature_list, label_list
 
 
 def obtain_intervals(dataset):
