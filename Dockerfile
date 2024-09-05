@@ -24,7 +24,8 @@ RUN pip install \
     jupyterlab \
     scikit-learn \
     seaborn \
-    tqdm
+    tqdm \
+    xgboost
 
 COPY *.py .
 
