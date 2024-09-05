@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 from helpers import *
 import sliding_window
 import full_history
@@ -9,7 +10,7 @@ ALIBABA = "Alibaba"
 
 
 
-def main(): 
+def main():
     dataset_name = GOOGLE
     if dataset_name == BACKBLAZE:
         DATASET_PATH_DISK = "./disk_2015_complete.csv"
@@ -19,7 +20,7 @@ def main():
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'g')
     elif dataset_name == ALIBABA:
         DATASET_PATH_DISK = "./alibaba_job_data.csv"
-        feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'a')        
+        feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'a')
     print(DATASET_PATH_DISK)
     num_chunks = len(feature_list)
     true_testing_labels = np.hstack(label_list[num_chunks//2:])
@@ -51,7 +52,7 @@ def main():
     random.shuffle(executions)
     print(executions)
 
-    for configuration in executions:
+    for configuration in tqdm(executions):
         print(configuration)
         type_retraining_data = configuration[0]
         detection = configuration[1]
