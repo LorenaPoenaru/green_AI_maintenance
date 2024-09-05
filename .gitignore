@@ -205,3 +205,4 @@ pyrightconfig.json
 disk_2015_complete.csv
 google_job_failure.csv
 alibaba_job_data.csv
+*.zip
