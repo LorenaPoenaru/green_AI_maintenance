@@ -18,13 +18,14 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # build with some basic python packages
 RUN pip install \
-    numpy \
-    scipy \
+    numpy=1.25.1 \
+    scipy=1.10.1 \
+    pandas=2.0.2 \
+    matplotlib=3.7.2 \
     codecarbon \
-    jupyterlab \
-    scikit-learn \
-    seaborn \
-    tqdm \
+    scikit-learn=1.2.2 \
+    seaborn=0.12.2 \
+    tqdm=4.65.0 \
     xgboost
 
 COPY *.py .
