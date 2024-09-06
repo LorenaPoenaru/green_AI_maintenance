@@ -11,7 +11,7 @@ ALIBABA = "Alibaba"
 
 
 def main():
-    dataset_name = ALIBABA
+    dataset_name = BACKBLAZE
     if dataset_name == BACKBLAZE:
         DATASET_PATH_DISK = "./disk_2015_complete.csv"
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'b')
@@ -46,7 +46,7 @@ def main():
             }
 
     N_WORKERS = 1
-    TOTAL_NUMBER_SEEDS = 1
+    TOTAL_NUMBER_SEEDS = 30
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
 
