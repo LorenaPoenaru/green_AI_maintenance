@@ -513,8 +513,7 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
 
 
 def main():
-
-    DATASET_PATH_JOB = 'alibaba_job_data.csv'
+    DATASET_PATH = 'alibaba_job_data.csv'
     feature_list, label_list = features_labels_preprocessing(DATASET_PATH, 'a')
     num_chunks = len(feature_list)
     true_testing_labels = np.hstack(label_list[num_chunks//2:])
