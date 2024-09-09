@@ -31,6 +31,20 @@ GOOGLE = "Google"
 ALIBABA = "Alibaba"
 
 
+
+def obtain_period_data(dataset):
+    features, labels = obtain_data(dataset, 'm')
+    terminals = obtain_intervals(dataset)
+    feature_list = []
+    label_list = []
+
+    for i in range(len(terminals) - 1):
+        idx = np.logical_and(features[:, 0] >= terminals[i], features[:, 0] < terminals[i + 1])
+        feature_list.append(features[idx][:, 1:])
+        label_list.append(labels[idx])
+    return feature_list, label_list
+
+
 def hyperparameter_tuning_process(dataset_name, type_retraining_data, detection, random_seed, batch, param_dist_rf, N_ITER_SEARCH, training_features_downsampling, training_labels_downsampling, total_hyperparam_tracker_values, tracker):
     tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "HyperparameterTuning", random_seed, batch))
     model = RandomForestClassifier(random_state = random_seed)
@@ -203,7 +217,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
     current_training_batches_list = initial_training_batches_list.copy()
     #need_to_retrain = 0
-    for batch in tqdm(range(num_chunks//2, num_chunks)):     
+    for batch in tqdm(range(num_chunks//2, num_chunks)):
+        print('Current Training Batches', current_training_batches_list)      
         # init drift alert
         drift_alert = 0
         # obtain features and labels

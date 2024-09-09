@@ -37,7 +37,6 @@ def get_scaled_transformation_testing_features(scaler, testing_features):
 def pipeline_periodic_model(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
     experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
     
-    total_time_training = 0
     predictions_test_fh = []
     lengths_training_fh = []
     partial_roc_auc_fh = []
@@ -141,7 +140,6 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, "Static", update_model, training_features, training_labels, total_fit_tracker_values, tracker)
     end_train_time_static = time.time() - begin_train_time_static
 
-    total_time_training = 0
     predictions_test_static_model = []
     # Testing model on periods
     begin_test_time_static = time.time()
@@ -216,7 +214,7 @@ def pipeline_static_model_debug(dataset_name, type_retraining_data, detection, r
     end_train_time_static = time.time() - begin_train_time_static
     #print('Training time: ', end_train_time_static)
 
-    total_time_training = 0
+
     predictions_test_static_model = []
     begin_test_time_static = time.time()
     for batch in tqdm(range(num_chunks//2, num_chunks)):
@@ -262,9 +260,7 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     experiment_name = str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(random_seed) + ".csv"
 
     necessary_label_annotation_effort = 0
-    total_time_training = 0
     no_necessary_retrainings = 0
-    lengths_training_ks_all = []
     partial_roc_auc_ks_all_model = []
     predictions_test_ks_all_model = []
     total_train_all = 0
@@ -273,6 +269,7 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     total_drift_detection_time = 0
     total_distribution_extraction_time = 0
     total_stat_test_time = 0
+    total_pca_time = 0
     detected_drifts = []
     
     ### Tracker tasks variables 
@@ -286,7 +283,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     current_training_batches_list = initial_training_batches_list.copy()
     print('Initial Training Batches', current_training_batches_list)
     #need_to_retrain = 0
-    for batch in tqdm(range(num_chunks//2, num_chunks)):     
+    for batch in tqdm(range(num_chunks//2, num_chunks)):
+        print('Current Training Batches', current_training_batches_list)     
         # init drift alert
         drift_alert = 0
         # obtain features and labels

@@ -2,10 +2,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
-from xgboost import XGBClassifier
+
 
 from sklearn import metrics, preprocessing
-from sklearn.utils.fixes import loguniform
+#from sklearn.utils.fixes import loguniform
 import scipy.stats as stats
 from sklearn.utils import resample
 import pandas as pd
@@ -24,36 +24,7 @@ WINDOW_HYPER_PARAMETER_FILE = r'parameter_list_window.csv'
 PERIOD_HYPER_PARAMETER_FILE = r'parameter_list_period.csv'
 
 
-def obtain_tuned_model(model_name, dataset, period, mode):
-    if dataset == 'g':
-        dataset = 'Google'
-    elif dataset == 'b':
-        dataset = 'Backblaze'
-    elif dataset == 'a':
-        dataset = 'Alibaba'
 
-    if mode == 'w': # half of total periods window, for concept drift detection
-        df = pd.read_csv(WINDOW_HYPER_PARAMETER_FILE)
-        # i + 1 in features = np.vstack(feature_list[i-window_size: i])
-    elif mode == 'p': # single time period, for ensemble
-        df = pd.read_csv(PERIOD_HYPER_PARAMETER_FILE)
-    else:
-        return None
-
-    para_str = df[np.logical_and(np.logical_and(df['Dataset']==dataset, df['Period']==period), df['Model']==model_name)].iloc[0]['Hyper']
-    para_dic = eval(para_str)
-
-    if model_name == 'lr':
-        model = LogisticRegression(**para_dic)
-    elif model_name == 'cart':
-        model = DecisionTreeClassifier(**para_dic)
-    elif model_name == 'gbdt':
-        model = XGBClassifier(n_jobs=N_WORKERS, **para_dic)
-    elif model_name == 'nn':
-        model = MLPClassifier(**para_dic)
-    elif model_name == 'rf':
-        model = RandomForestClassifier(n_jobs=N_WORKERS, **para_dic)
-    return model
 
 
 def obtain_param_dist(model_name):
@@ -107,18 +78,6 @@ def obtain_param_dist(model_name):
     return param_dist
 
 
-def obtain_raw_model(model_name):
-    if model_name == 'lr':
-        model = LogisticRegression()
-    elif model_name == 'cart':
-        model = DecisionTreeClassifier()
-    elif model_name == 'gbdt':
-        model = XGBClassifier(n_jobs=1)
-    elif model_name == 'nn':
-        model = MLPClassifier()
-    elif model_name == 'rf':
-        model = RandomForestClassifier()
-    return model
 
 
 def obtain_data(dataset, interval='m'):

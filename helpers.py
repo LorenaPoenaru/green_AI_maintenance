@@ -44,6 +44,36 @@ def obtain_intervals(dataset):
     return terminals
 
 
+def obtain_period_data(dataset):
+    features, labels = obtain_data(dataset, 'm')
+    terminals = obtain_intervals(dataset)
+    feature_list = []
+    label_list = []
+
+    for i in range(len(terminals) - 1):
+        idx = np.logical_and(features[:, 0] >= terminals[i], features[:, 0] < terminals[i + 1])
+        feature_list.append(features[idx][:, 1:])
+        label_list.append(labels[idx])
+    return feature_list, label_list
+
+
+def obtain_model(model_name):
+    '''
+    This function instantiate a specific model 
+    Note: the MODEL_TYPE global variable must be set first
+    Args:
+        model_name (str): [rf, nn, svm, cart, rgf]
+    Returns:
+        (instance): instance of given model with preset parameters.
+        Return None if the model name is not in the option
+    '''
+    if model_name == 'rf':
+        return RandomForestClassifier(n_estimators=50, criterion='gini', class_weight=None, max_depth=None, 
+                                      min_impurity_decrease=0.0, min_samples_leaf=1, min_samples_split=2, 
+                                      n_jobs=N_WORKERS, random_state = random_seed)
+
+    return None
+
 def obtain_natural_chunks(features, labels, terminals):
     feature_list = []
     label_list = []
@@ -63,6 +93,7 @@ def downsampling(training_features, training_labels, random_seed, ratio=10):
     resampled_features = training_features[idx_resampled]
     resampled_labels = training_labels[idx_resampled]
     return resampled_features, resampled_labels
+
 
 def important_features_extraction(model, features_input):
     # extract features and their importances
@@ -84,6 +115,7 @@ def filtering_non_important_features(features_array, features_names, important_f
     # transform dataframe with only into features back into array
     important_features_array = df_important_features.to_numpy()
     return important_features_array
+
 
 def features_labels_preprocessing(DATASET_PATH, dataset):
     if(dataset=='b'):
@@ -150,9 +182,89 @@ def features_labels_preprocessing(DATASET_PATH, dataset):
         print('Incorrect Dataset')
     return feature_list, label_list
 
+def set_name_tracker_for_task(dataset_name, type_retraining_data, detection, task, random_seed, batch):
+    return str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(task) + "_RandomSeed_" + str(random_seed) + "_Batch" + str(batch)
+
+def initiate_tracker_var():
+    return {'cpu': 0, 'gpu': 0, 'ram':0, 'duration':0}
+
+def initiate_tracker_variables():    
+    total_hyperparam_tracker_values = initiate_tracker_var()
+    total_fit_tracker_values = initiate_tracker_var()
+    total_testing_tracker_values = initiate_tracker_var()
+    return total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values
+
+def initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks):
+    # obtain training features and labels
+    training_features = np.vstack(feature_list[0: num_chunks//2])
+    training_labels = np.hstack(label_list[0//2: num_chunks//2])
+    return training_features, training_labels
+
+
+def get_testing_features_and_labels_from_lists(feature_list, label_list, batch):
+    testing_features = feature_list[batch]
+    testing_labels = label_list[batch] 
+    return testing_features, testing_labels
+
+def scaling_data(training_features, testing_features):
+    # scaler for training data
+    update_scaler = StandardScaler()
+    training_features = update_scaler.fit_transform(training_features)
+    # scaling testing features
+    testing_features = update_scaler.transform(testing_features)
+    return training_features, testing_features
+
+
+def format_data_for_the_seed(columns_names, values):    
+    df_results_periodic_fh = pd.DataFrame(columns=columns_names)
+    df_results_periodic_fh.loc[0] = values
+    return df_results_periodic_fh
+
+def store_into_file(filename, df_results_periodic_fh):
+    df_results_periodic_fh.to_csv(filename, index=False,  sep=";") 
+
+
+#### Functions with Energy tracker
+def hyperparameter_tuning_process(dataset_name, type_retraining_data, detection, random_seed, batch, param_dist_rf, N_ITER_SEARCH, training_features_downsampling, training_labels_downsampling, total_hyperparam_tracker_values, tracker):
+    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "HyperparameterTuning", random_seed, batch))
+    model = RandomForestClassifier(random_state = random_seed)
+    random_search = RandomizedSearchCV(model,param_distributions = param_dist_rf,
+                                            n_iter=N_ITER_SEARCH,
+                                            scoring='roc_auc',
+                                            cv=4, n_jobs=1, random_state = random_seed)
+    random_search.fit(training_features_downsampling, training_labels_downsampling)
+    update_model = random_search.best_estimator_
+    hyperparameter_tuning_emissions = tracker.stop_task()
+    total_hyperparam_tracker_values['cpu'] += hyperparameter_tuning_emissions.cpu_energy
+    total_hyperparam_tracker_values['gpu'] += hyperparameter_tuning_emissions.gpu_energy
+    total_hyperparam_tracker_values['ram'] += hyperparameter_tuning_emissions.ram_energy
+    total_hyperparam_tracker_values['duration'] += hyperparameter_tuning_emissions.duration
+    return update_model, total_hyperparam_tracker_values
+
+
+def best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker):
+    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "ModelFit", random_seed, batch))
+    update_model.fit(training_features, training_labels)
+    model_fit_emissions = tracker.stop_task()
+    total_fit_tracker_values['cpu'] += model_fit_emissions.cpu_energy
+    total_fit_tracker_values['gpu'] += model_fit_emissions.gpu_energy
+    total_fit_tracker_values['ram'] += model_fit_emissions.ram_energy
+    total_fit_tracker_values['duration'] += model_fit_emissions.duration
+    return update_model, total_fit_tracker_values
+
+def get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker):
+    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "Testing", random_seed, batch))
+    predictions_test_updated = update_model.predict(testing_features)
+    testing_emissions = tracker.stop_task()
+    total_testing_tracker_values['cpu'] += testing_emissions.cpu_energy
+    total_testing_tracker_values['gpu'] += testing_emissions.gpu_energy
+    total_testing_tracker_values['ram'] += testing_emissions.ram_energy
+    total_testing_tracker_values['duration'] += testing_emissions.duration
+    return predictions_test_updated, total_testing_tracker_values
+
 def distribution_extraction(reference_data, testing_data, dataset_name, type_retraining_data, detection, random_seed, batch, total_distribution_tracker_values, tracker):
     tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "Distribution_Extraction", random_seed, batch))   
-    distribution_reference = sns.distplot(np.array(reference_data)).get_lines()[0].get_data()[1] ## Distrib extract Energy start
+    distribution_reference = sns.distplot(np.array(reference_data)).get_lines()[0].get_data()[1] 
     plt.close()
     distribution_test = sns.distplot(np.array(testing_data)).get_lines()[0].get_data()[1]
     plt.close()
@@ -162,17 +274,6 @@ def distribution_extraction(reference_data, testing_data, dataset_name, type_ret
     total_distribution_tracker_values['ram'] += distribution_emissions.ram_energy
     total_distribution_tracker_values['duration'] += distribution_emissions.duration
     return distribution_reference, distribution_test, total_distribution_tracker_values
-
-def ks_stats(dataset_name, type_retraining_data, detection, random_seed, batch, distribution_reference, distribution_test, total_stats_tracker_values, tracker):
-    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "KS_Stats", random_seed, batch))   
-    stat_test = stats.kstest
-    v, p = stat_test(distribution_reference, distribution_test)
-    stats_emissions = tracker.stop_task()
-    total_stats_tracker_values['cpu'] += stats_emissions.cpu_energy
-    total_stats_tracker_values['gpu'] += stats_emissions.gpu_energy
-    total_stats_tracker_values['ram'] += stats_emissions.ram_energy
-    total_stats_tracker_values['duration'] += stats_emissions.duration
-    return p, total_stats_tracker_values
 
 def ks_drift_detection(dataset_name, type_retraining_data, detection, random_seed, batch, reference_data, testing_data, total_distribution_tracker_values, total_stats_tracker_values, tracker):
     # extract distributions from reference and testing data
@@ -199,6 +300,18 @@ def ks_drift_detection(dataset_name, type_retraining_data, detection, random_see
         drift_alert = 0
     return drift_alert, distribution_extraction_time_end, ks_test_time_end, total_distribution_tracker_values, total_stats_tracker_values
 
+def ks_stats(dataset_name, type_retraining_data, detection, random_seed, batch, distribution_reference, distribution_test, total_stats_tracker_values, tracker):
+    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "KS_Stats", random_seed, batch))   
+    stat_test = stats.kstest
+    v, p = stat_test(distribution_reference, distribution_test)
+    stats_emissions = tracker.stop_task()
+    total_stats_tracker_values['cpu'] += stats_emissions.cpu_energy
+    total_stats_tracker_values['gpu'] += stats_emissions.gpu_energy
+    total_stats_tracker_values['ram'] += stats_emissions.ram_energy
+    total_stats_tracker_values['duration'] += stats_emissions.duration
+    return p, total_stats_tracker_values
+
+
 def run_pca(dataset_name, type_retraining_data, detection, random_seed, batch, training_features, testing_features, total_pca_tracker_values, tracker):
     tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "PCA", random_seed, batch))
     pca = PCA(n_components = 0.95, random_state = random_seed)
@@ -224,78 +337,3 @@ def get_fi(dataset_name, type_retraining_data, detection, random_seed, batch, tr
     total_fi_tracker_values['ram'] += fi_emissions.ram_energy
     total_fi_tracker_values['duration'] += fi_emissions.duration
     return important_features, training_important_features_model, testing_important_features_model, total_fi_tracker_values
-
-def set_name_tracker_for_task(dataset_name, type_retraining_data, detection, task, random_seed, batch):
-    return str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(task) + "_RandomSeed_" + str(random_seed) + "_Batch" + str(batch)
-
-def hyperparameter_tuning_process(dataset_name, type_retraining_data, detection, random_seed, batch, param_dist_rf, N_ITER_SEARCH, training_features_downsampling, training_labels_downsampling, total_hyperparam_tracker_values, tracker):
-    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "HyperparameterTuning", random_seed, batch))
-    model = RandomForestClassifier(random_state = random_seed)
-    random_search = RandomizedSearchCV(model,param_distributions = param_dist_rf,
-                                            n_iter=N_ITER_SEARCH,
-                                            scoring='roc_auc',
-                                            cv=4, n_jobs=1, random_state = random_seed)
-    random_search.fit(training_features_downsampling, training_labels_downsampling)
-    update_model = random_search.best_estimator_
-    hyperparameter_tuning_emissions = tracker.stop_task()
-    total_hyperparam_tracker_values['cpu'] += hyperparameter_tuning_emissions.cpu_energy
-    total_hyperparam_tracker_values['gpu'] += hyperparameter_tuning_emissions.gpu_energy
-    total_hyperparam_tracker_values['ram'] += hyperparameter_tuning_emissions.ram_energy
-    total_hyperparam_tracker_values['duration'] += hyperparameter_tuning_emissions.duration
-    return update_model, total_hyperparam_tracker_values
-
-def best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker):
-    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "ModelFit", random_seed, batch))
-    update_model.fit(training_features, training_labels)
-    model_fit_emissions = tracker.stop_task()
-    total_fit_tracker_values['cpu'] += model_fit_emissions.cpu_energy
-    total_fit_tracker_values['gpu'] += model_fit_emissions.gpu_energy
-    total_fit_tracker_values['ram'] += model_fit_emissions.ram_energy
-    total_fit_tracker_values['duration'] += model_fit_emissions.duration
-    return update_model, total_fit_tracker_values
-
-def format_data_for_the_seed(columns_names, values):    
-    df_results_periodic_fh = pd.DataFrame(columns=columns_names)
-    df_results_periodic_fh.loc[0] = values
-    return df_results_periodic_fh
-
-def store_into_file(filename, df_results_periodic_fh):
-    df_results_periodic_fh.to_csv(filename, index=False,  sep=";") #, mode='a', header=not os.path.exists(filename))
-
-def initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks):
-    # obtain training features and labels
-    training_features = np.vstack(feature_list[0: num_chunks//2])
-    training_labels = np.hstack(label_list[0//2: num_chunks//2])
-    return training_features, training_labels
-
-def get_testing_features_and_labels_from_lists(feature_list, label_list, batch):
-    testing_features = feature_list[batch]
-    testing_labels = label_list[batch] 
-    return testing_features, testing_labels
-
-def scaling_data(training_features, testing_features):
-    # scaler for training data
-    update_scaler = StandardScaler()
-    training_features = update_scaler.fit_transform(training_features)
-    # scaling testing features
-    testing_features = update_scaler.transform(testing_features)
-    return training_features, testing_features
-
-def get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker):
-    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "Testing", random_seed, batch))
-    predictions_test_updated = update_model.predict(testing_features)
-    testing_emissions = tracker.stop_task()
-    total_testing_tracker_values['cpu'] += testing_emissions.cpu_energy
-    total_testing_tracker_values['gpu'] += testing_emissions.gpu_energy
-    total_testing_tracker_values['ram'] += testing_emissions.ram_energy
-    total_testing_tracker_values['duration'] += testing_emissions.duration
-    return predictions_test_updated, total_testing_tracker_values
-
-def initiate_tracker_var():
-    return {'cpu': 0, 'gpu': 0, 'ram':0, 'duration':0}
-
-def initiate_tracker_variables():    
-    total_hyperparam_tracker_values = initiate_tracker_var()
-    total_fit_tracker_values = initiate_tracker_var()
-    total_testing_tracker_values = initiate_tracker_var()
-    return total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values
