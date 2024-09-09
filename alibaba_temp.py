@@ -536,8 +536,8 @@ def main():
     TOTAL_NUMBER_SEEDS = 1
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
-
-    print(DATASET_PATH_DISK)
+    dataset_name = "Alibaba"
+    print(DATASET_PATH)
 
     configurations =  [("FullHistory","KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI")]
     counter = {}
