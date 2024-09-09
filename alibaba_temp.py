@@ -107,7 +107,7 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         end_test_time_ks_all = time.time() - begin_test_time_ks_all
         total_test_time_ks_all = total_test_time_ks_all + end_test_time_ks_all
 
-        partial_roc_auc_ks_all_model.append(roc_auc_score(testing_labels_model, predictions_test_updated))
+        partial_roc_auc_ks_all_model.append(roc_auc_score(testing_labels, predictions_test_updated))
         predictions_test_ks_all_model = np.concatenate([predictions_test_ks_all_model, predictions_test_updated])
         
         
