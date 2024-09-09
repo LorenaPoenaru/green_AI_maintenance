@@ -44,19 +44,6 @@ def obtain_intervals(dataset):
     return terminals
 
 
-def obtain_period_data(dataset):
-    features, labels = obtain_data(dataset, 'm')
-    terminals = obtain_intervals(dataset)
-    feature_list = []
-    label_list = []
-
-    for i in range(len(terminals) - 1):
-        idx = np.logical_and(features[:, 0] >= terminals[i], features[:, 0] < terminals[i + 1])
-        feature_list.append(features[idx][:, 1:])
-        label_list.append(labels[idx])
-    return feature_list, label_list
-
-
 def obtain_model(model_name):
     '''
     This function instantiate a specific model 

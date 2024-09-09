@@ -177,11 +177,8 @@ def get_alibaba_data():
     print('Loading data from', path)
     df = pd.read_csv(path)
 
-    columns = ['start_time', 
-        'user', 'task_name', 'inst_num', 'plan_cpu', 'plan_mem', 'plan_gpu', 
-        'cpu_usage', 'gpu_wrk_util', 'avg_mem', 'max_mem', 'avg_gpu_wrk_mem', 'max_gpu_wrk_mem']
+    columns = ['start_time', 'user', 'task_name', 'inst_num', 'plan_cpu', 'plan_mem', 'plan_gpu', 'cpu_usage', 'gpu_wrk_util', 'avg_mem', 'max_mem', 'avg_gpu_wrk_mem', 'max_gpu_wrk_mem']
     print('Load complete')
-
     features = df[columns].to_numpy()
     labels = (df['status']=='Failed').to_numpy()
 
