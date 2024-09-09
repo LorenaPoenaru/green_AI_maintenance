@@ -71,8 +71,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         training_features = update_scaler.fit_transform(training_features)
         training_labels = training_labels
         # obtain testing features and labels
-        testing_features = feature_list[i]
-        testing_labels = label_list[i]
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
         # scaling testing features
         testing_features = update_scaler.transform(testing_features)
         testing_labels = testing_labels
@@ -226,8 +226,8 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
 
         
         # obtain testing features and labels
-        testing_features = feature_list[i]
-        testing_labels = label_list[i]
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
 
         
         # scaling testing features
@@ -399,8 +399,8 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         training_labels = training_labels
         
         # obtain testing features and labels
-        testing_features = feature_list[i]
-        testing_labels = label_list[i]
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
         
         # scaling testing features
         testing_features = update_scaler.transform(testing_features)
@@ -474,8 +474,8 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
             # add new data to the training for full history approach        
             current_training_batches_list.append(batch)
             
-            training_features_list_updated = [feature_list[i] for i in current_training_batches_list]
-            training_labels_list_updated = [label_list[i] for i in current_training_batches_list]
+            training_features_list_updated = [feature_list[batch] for i in current_training_batches_list]
+            training_labels_list_updated = [label_list[batch] for i in current_training_batches_list]
         
             training_features = np.vstack(training_features_list_updated)
             training_labels = np.hstack(training_labels_list_updated)
