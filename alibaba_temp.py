@@ -52,8 +52,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     total_stats_tracker_values = initiate_tracker_var()
 
     # obtain training features and labels
-    training_features_init = np.vstack(feature_list[0: i])
-    training_labels_init = np.hstack(label_list[0//2: i])
+    training_features_init = np.vstack(feature_list[0: num_chunks//2])
+    training_labels_init = np.hstack(label_list[0//2: num_chunks//2])
 
     for batch in tqdm(range(num_chunks//2, num_chunks)):
         # init drift alert
@@ -201,8 +201,8 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     total_pca_tracker_values = initiate_tracker_var()
 
     # obtain training features and labels
-    training_features_init = np.vstack(feature_list[0: i])
-    training_labels_init = np.hstack(label_list[0//2: i])
+    training_features_init = np.vstack(feature_list[0: num_chunks//2])
+    training_labels_init = np.hstack(label_list[0//2: num_chunks//2])
 
 
     for batch in tqdm(range(num_chunks//2, num_chunks)):
@@ -378,8 +378,8 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
     total_fi_tracker_values = initiate_tracker_var()
 
     # obtain training features and labels   
-    training_features_init = np.vstack(feature_list[0: i])
-    training_labels_init = np.hstack(label_list[0//2: i])
+    training_features_init = np.vstack(feature_list[0: num_chunks//2])
+    training_labels_init = np.hstack(label_list[0//2: num_chunks//2])
 
     for batch in tqdm(range(num_chunks//2, num_chunks)):
         
