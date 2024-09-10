@@ -22,9 +22,102 @@ from sklearn.model_selection import RandomizedSearchCV
 #Energy Measurement Tool
 from codecarbon import EmissionsTracker
 
-from helpers import *
+from utilities import obtain_period_data, obtain_metrics
+
+def features_labels_preprocessing(DATASET_PATH, dataset):
+    
+    if(dataset=='b'):
+        
+        print('Data Reading and Preprocessing')
+        
+        # set data paths and columns names
+        features_disk_failure = ['smart_1_raw', 'smart_4_raw', 'smart_5_raw', 'smart_7_raw', 'smart_9_raw', 'smart_12_raw', 'smart_187_raw', 'smart_193_raw', 'smart_194_raw', 'smart_197_raw', 'smart_199_raw', 
+                         'smart_4_raw_diff', 'smart_5_raw_diff', 'smart_9_raw_diff', 'smart_12_raw_diff', 'smart_187_raw_diff', 'smart_193_raw_diff', 'smart_197_raw_diff', 'smart_199_raw_diff']
+        columns = ['serial_number', 'date'] + features_disk_failure + ['label']
+        
+        # read dataset
+        df = pd.read_csv(DATASET_PATH_DISK, header=None, dtype = 'str').iloc[1:,1:]
+        df.columns = columns
+        
+        # ignore serial number
+        df = df[df.columns[1:]]
+        
+        for feature in features_disk_failure:
+            df[feature] = df[feature].astype(float)
 
 
+        d = {'True': True, 'False': False}
+        df['label'] = df['label'].map(d)
+
+        df['label'].unique()
+
+        # transform date to date time
+        df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+        # divide on weeks
+        df['date'] = pd.Series(pd.DatetimeIndex(df['date']).day_of_year)
+        
+        print('Features and Labels Computing')
+        
+        # features and labels extraction and computation
+        features = df[df.columns[:-1]].to_numpy()
+        labels = df[df.columns[-1]].to_numpy()
+        feature_list, label_list = obtain_natural_chunks(features, labels, obtain_intervals('b'))
+        
+    elif(dataset=='g'):
+        
+        print('Data Reading and Preprocessing')
+        
+        # set data paths and columns names
+        features_job_failure = ['User ID', 'Job Name', 'Scheduling Class',
+                   'Num Tasks', 'Priority', 'Diff Machine', 'CPU Requested', 'Mem Requested', 'Disk Requested',
+                   'Avg CPU', 'Avg Mem', 'Avg Disk', 'Std CPU', 'Std Mem', 'Std Disk']
+        columns_initial = ['Job ID', 'Status', 'Start Time', 'End Time'] + features_job_failure
+        
+        # read dataset
+        df = pd.read_csv(DATASET_PATH, header=None)
+        df.columns = columns_initial
+        df = df.tail(-1)
+        # ignore Job ID
+        df = df.drop(['Job ID'], axis = 1)
+        columns = features_job_failure
+
+        include_end_time = False
+        
+        print('Features and Labels Preprocessing')
+        
+        # features and labels preprocessing
+        features = df[(['Start Time']+ features_job_failure)].to_numpy()
+        labels = (df['Status']==3).to_numpy()
+
+        # FEATURES PREPROCESSING
+        offset = (1 if include_end_time else 0)
+
+        # ENCODE USER ID
+        le = preprocessing.LabelEncoder()
+        features[:, 1+offset] = le.fit_transform(features[:, 1+offset])
+
+        # ENCODE JOB NAME
+        le = preprocessing.LabelEncoder()
+        features[:, 2+offset] = le.fit_transform(features[:, 2+offset])
+
+        features = features.astype(float)
+        
+        print('Features and Labels Computing')
+        
+        # features and labels extraction and computation
+        feature_list, label_list = obtain_natural_chunks(features, labels, obtain_intervals('g'))
+    
+    elif(dataset=='a'):
+        df = pd.read_csv(DATASET_PATH)
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+        
+        feature_list, label_list = obtain_period_data('a')
+        
+    else:
+        print('Incorrect Dataset')
+        
+    
+    return feature_list, label_list
 
 def ks_drift_detection(reference_data, testing_data, tracker, total_distribution_tracker_values, total_stats_tracker_values):
     
