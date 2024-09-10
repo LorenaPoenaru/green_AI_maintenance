@@ -139,7 +139,7 @@ def features_labels_preprocessing(DATASET_PATH, dataset):
     
     return feature_list, label_list
 
-def ks_drift_detection(reference_data, testing_data, tracker, total_distribution_tracker_values, total_stats_tracker_values):
+def ks_drift_detection(reference_data, testing_data, tracker, total_distribution_tracker_values, total_stats_tracker_values, dataset_name, type_retraining_data, detection, random_seed, i):
     
     # extract distributions from reference and testing data
     
@@ -463,7 +463,7 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         pca_computing_time_end = time.time() - pca_computing_time_start
         
         # Detect Drift
-        drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(df_train_features_sorted_pca, df_test_features_sorted_pca, tracker, total_distribution_tracker_values, total_stats_tracker_values)
+        drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(df_train_features_sorted_pca, df_test_features_sorted_pca, tracker, total_distribution_tracker_values, total_stats_tracker_values, dataset_name, type_retraining_data, detection, random_seed, i)
         drift_time_end = time.time() - drift_time_start
 
         total_distribution_extraction_time = total_distribution_extraction_time + distribution_extraction_time
