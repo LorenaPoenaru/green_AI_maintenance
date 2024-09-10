@@ -24,6 +24,26 @@ from codecarbon import EmissionsTracker
 
 from utilities import obtain_period_data, obtain_metrics
 
+def set_name_tracker_for_task(dataset_name, type_retraining_data, detection, task, random_seed, batch):
+    return str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(task) + "_RandomSeed_" + str(random_seed) + "_Batch" + str(batch)
+
+def initiate_tracker_var():
+    return {'cpu': 0, 'gpu': 0, 'ram':0, 'duration':0}
+
+def initiate_tracker_variables():    
+    total_hyperparam_tracker_values = initiate_tracker_var()
+    total_fit_tracker_values = initiate_tracker_var()
+    total_testing_tracker_values = initiate_tracker_var()
+    return total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values
+
+def format_data_for_the_seed(columns_names, values):    
+    df_results_periodic_fh = pd.DataFrame(columns=columns_names)
+    df_results_periodic_fh.loc[0] = values
+    return df_results_periodic_fh
+
+def store_into_file(filename, df_results_periodic_fh):
+    df_results_periodic_fh.to_csv(filename, index=False,  sep=";") 
+
 def features_labels_preprocessing(DATASET_PATH, dataset):
     
     if(dataset=='b'):
