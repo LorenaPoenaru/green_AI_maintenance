@@ -25,8 +25,8 @@ RUN pip install \
     codecarbon \
     scikit-learn==1.2.2 \
     seaborn==0.12.2 \
-    tqdm==4.65.0 \
-    xgboost
+    tqdm 
+
 
 COPY *.py .
 
