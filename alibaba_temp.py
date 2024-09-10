@@ -26,6 +26,43 @@ from helpers import *
 
 
 
+def ks_drift_detection(reference_data, testing_data, tracker, total_distribution_tracker_values, total_stats_tracker_values):
+    
+    # extract distributions from reference and testing data
+    
+    distribution_extraction_time_start = time.time()
+    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "Distribution_Extraction", random_seed, i))   
+    distribution_reference = sns.distplot(np.array(reference_data)).get_lines()[0].get_data()[1]
+    plt.close()
+    distribution_test = sns.distplot(np.array(testing_data)).get_lines()[0].get_data()[1]
+    plt.close()
+    distribution_emissions = tracker.stop_task()
+    total_distribution_tracker_values['cpu'] += distribution_emissions.cpu_energy
+    total_distribution_tracker_values['gpu'] += distribution_emissions.gpu_energy
+    total_distribution_tracker_values['ram'] += distribution_emissions.ram_energy
+    total_distribution_tracker_values['duration'] += distribution_emissions.duration
+    distribution_extraction_time_end = time.time() - distribution_extraction_time_start
+    # apply KS statistical test
+    
+    ks_test_time_start = time.time()
+    tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "KS_Stats", random_seed, i))   
+    stat_test = stats.kstest
+    v, p = stat_test(distribution_reference, distribution_test)
+    stats_emissions = tracker.stop_task()
+    total_stats_tracker_values['cpu'] += stats_emissions.cpu_energy
+    total_stats_tracker_values['gpu'] += stats_emissions.gpu_energy
+    total_stats_tracker_values['ram'] += stats_emissions.ram_energy
+    total_stats_tracker_values['duration'] += stats_emissions.duration
+    ks_test_time_end = time.time() - ks_test_time_start
+    # check if drift
+    
+    if(p<0.05):
+        drift_alert = 1
+    else:
+        drift_alert = 0
+
+    return drift_alert, distribution_extraction_time_end, ks_test_time_end, total_distribution_tracker_values, total_stats_tracker_values
+
 
 
 def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list):
@@ -200,101 +237,122 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     total_stats_tracker_values = initiate_tracker_var()
     total_pca_tracker_values = initiate_tracker_var()
 
-    # obtain training features and labels
-    training_features_init = np.vstack(feature_list[0: num_chunks//2])
-    training_labels_init = np.hstack(label_list[0//2: num_chunks//2])
-
-
-    for batch in tqdm(range(num_chunks//2, num_chunks)):
+    for i in tqdm(range(num_chunks//2, num_chunks)):
+        # obtain training features and labels
+        training_features_init = np.vstack(feature_list[0: i])
+        training_labels_init = np.hstack(label_list[0//2: i])
         
         # init drift alert
         drift_alert = 0
 
         # check if it is the first batch
-        if(batch==num_chunks//2):
+        if(i==num_chunks//2):
             training_features = training_features_init
             training_labels = training_labels_init
             current_training_batches_list = initial_training_batches_list.copy()
             print('Initial Training Batches', current_training_batches_list)
 
-        
+            # obtain testing features and labels
+        testing_features = feature_list[i]
+        testing_labels = label_list[i]
 
         # scaler on training data (No downsampling)
         update_scaler = StandardScaler()
-        training_features = update_scaler.fit_transform(training_features)
-        training_labels = training_labels
+        training_features_model = update_scaler.fit_transform(training_features)
+        training_labels_model = training_labels
 
-        
-        # obtain testing features and labels
-        testing_features = feature_list[batch]
-        testing_labels = label_list[batch]
-
-        
         # scaling testing features
-        testing_features = update_scaler.transform(testing_features)
-        testing_labels = testing_labels
-
+        testing_features_model = update_scaler.transform(testing_features)
+        testing_labels_model = testing_labels
 
         # training model
         begin_train_fh_ks_pca = time.time()
 
 
-        if(batch==num_chunks//2 or need_to_retrain == 1):
+        if(i==num_chunks//2 or need_to_retrain == 1):
             print('RETRAINING MODEL')
             
             begin_train_fh_ks_pca = time.time()
         
             begin_hyperparam_tunning_update = time.time()
+            tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "HyperparameterTuning", random_seed, i))
+            model = RandomForestClassifier(random_state = random_seed)
+            random_search = RandomizedSearchCV(model,
+                                                       param_distributions = param_dist_rf,
+                                                       n_iter=N_ITER_SEARCH,
+                                                       scoring='roc_auc',
+                                                       cv=4, n_jobs=1, random_state = random_seed)
+
             
-            update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
-                                                                                          detection, random_seed, batch, param_dist_rf, 
-                                                                                          N_ITER_SEARCH, training_features, 
-                                                                                          training_labels,
-                                                                                          total_hyperparam_tracker_values, tracker)
+            random_search.fit(training_features_model, training_labels_model)
+            update_model_ks_pca = random_search.best_estimator_
+            hyperparameter_tuning_emissions = tracker.stop_task()
+            total_hyperparam_tracker_values['cpu'] += hyperparameter_tuning_emissions.cpu_energy
+            total_hyperparam_tracker_values['gpu'] += hyperparameter_tuning_emissions.gpu_energy
+            total_hyperparam_tracker_values['ram'] += hyperparameter_tuning_emissions.ram_energy
+            total_hyperparam_tracker_values['duration'] += hyperparameter_tuning_emissions.duration
+
             end_hyperparam_tunning_update = time.time() - begin_hyperparam_tunning_update
             total_hyperparam_fh_ks_pca = total_hyperparam_fh_ks_pca + end_hyperparam_tunning_update
             
             
             
-            
-            update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
-            
+            tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "ModelFit", random_seed, i))
+            update_model_ks_pca.fit(training_features_model, training_labels_model)
+            model_fit_emissions = tracker.stop_task()
+            total_fit_tracker_values['cpu'] += model_fit_emissions.cpu_energy
+            total_fit_tracker_values['gpu'] += model_fit_emissions.gpu_energy
+            total_fit_tracker_values['ram'] += model_fit_emissions.ram_energy
+            total_fit_tracker_values['duration'] += model_fit_emissions.duration
             end_train_fh_ks_pca = time.time() - begin_train_fh_ks_pca
+        
             total_train_fh_pca = total_train_fh_pca + end_train_fh_ks_pca
         
         
         # evaluate model on testing data
         
         begin_test_time_ks_pca = time.time()
-        
-        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker)
-        
+        tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "Testing", random_seed, i))
+        predictions_test_updated = update_model_ks_pca.predict(testing_features_model)
+        testing_emissions = tracker.stop_task()
+        total_testing_tracker_values['cpu'] += testing_emissions.cpu_energy
+        total_testing_tracker_values['gpu'] += testing_emissions.gpu_energy
+        total_testing_tracker_values['ram'] += testing_emissions.ram_energy
+        total_testing_tracker_values['duration'] += testing_emissions.duration
         end_test_time_ks_pca = time.time() - begin_test_time_ks_pca
-        
         total_test_time_ks_pca = total_test_time_ks_pca + end_test_time_ks_pca
         
         
         # ROC AUC
-        partial_roc_auc_ks_pca_model.append(roc_auc_score(testing_labels, predictions_test_updated))
-        predictions_test_ks_pca_model = np.concatenate([predictions_test_ks_pca_model, predictions_test_updated]) 
-        
+        partial_roc_auc_ks_pca_model.append(roc_auc_score(testing_labels_model, predictions_test_updated))
+        predictions_test_ks_pca_model = np.concatenate([predictions_test_ks_pca_model, predictions_test_updated])
         print('Predictions Test Batch', len(predictions_test_updated))
         print('Prediction Test All', len(predictions_test_ks_pca_model))
         
-        
         # Drift Detection
         need_to_retrain = 0
+        print('MODEL', update_model_ks_pca)
+        
         drift_time_start = time.time()
         
         # Extract PCA Features
         pca_computing_time_start = time.time()
-        df_train_features_sorted_pca, df_test_features_sorted_pca, total_pca_tracker_values =run_pca(dataset_name, type_retraining_data, detection, random_seed, batch, training_features, testing_features, total_pca_tracker_values, tracker)
+        tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "PCA", random_seed, i))
+        pca = PCA(n_components = 0.95, random_state = random_seed)
+        pca.fit(training_features_model)
+        df_train_features_sorted_pca = pca.transform(training_features_model)
+        df_test_features_sorted_pca = pca.transform(testing_features_model)
+        pca_emissions = tracker.stop_task()
+        total_pca_tracker_values['cpu'] += pca_emissions.cpu_energy
+        total_pca_tracker_values['gpu'] += pca_emissions.gpu_energy
+        total_pca_tracker_values['ram'] += pca_emissions.ram_energy
+        total_pca_tracker_values['duration'] += pca_emissions.duration
         pca_computing_time_end = time.time() - pca_computing_time_start
         
         # Detect Drift
-        drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(dataset_name, type_retraining_data, detection, random_seed, batch, df_train_features_sorted_pca, df_test_features_sorted_pca, total_distribution_tracker_values, total_stats_tracker_values, tracker)
+        drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(df_train_features_sorted_pca, df_test_features_sorted_pca, tracker, total_distribution_tracker_values, total_stats_tracker_values)
         drift_time_end = time.time() - drift_time_start
-        
+
         total_distribution_extraction_time = total_distribution_extraction_time + distribution_extraction_time
         total_stat_test_time = total_stat_test_time + ks_test_time
         total_pca_time = total_pca_time + pca_computing_time_end
@@ -305,18 +363,20 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         if(drift_alert==1):
             need_to_retrain = 1
             drift_alert = 0
-
+            print('CHANGE OF TRAINING')
             no_necessary_retrainings = no_necessary_retrainings + 1
             necessary_label_annotation_effort = necessary_label_annotation_effort + len(testing_labels)
 
+            
             # add new data to the training for full history approach
-            current_training_batches_list.append(batch)
+            current_training_batches_list.append(i)
+                    
+            
             training_features_list_updated = [feature_list[i] for i in current_training_batches_list]
             training_labels_list_updated = [label_list[i] for i in current_training_batches_list]
         
             training_features = np.vstack(training_features_list_updated)
-            training_labels = np.hstack(training_labels_list_updated)
-
+            training_labels = np.hstack(training_labels_list_updated)   
         
         print('Current Training Batches',current_training_batches_list)
     
@@ -539,7 +599,7 @@ def main():
     dataset_name = "Alibaba"
     print(DATASET_PATH)
 
-    configurations =  [("FullHistory","KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI")]
+    configurations =  [("FullHistory", "KS-PCA")] #, ("FullHistory", "KS-FI")] #("FullHistory","KS-ALL"), 
     counter = {}
     for configuration in configurations:
         counter[configuration] = TOTAL_NUMBER_SEEDS
