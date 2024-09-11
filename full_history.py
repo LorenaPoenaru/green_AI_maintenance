@@ -52,32 +52,27 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
         training_features_init = np.vstack(feature_list[0: batch])
         training_labels_init = np.hstack(label_list[0//2: batch])
         
-        # init drift alert
-        drift_alert = 0
     
         # check if it is the first batch
         if(batch==num_chunks//2):
-            training_features_before = training_features_init
-            training_labels_before = training_labels_init
-            current_training_batches_list = initial_training_batches_list.copy()
-            print('Initial Training Batches', current_training_batches_list)
+            training_features = training_features_init
+            training_labels = training_labels_init
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
-        training_features = update_scaler.fit_transform(training_features_before)
-        training_labels = training_labels_before
+        training_features_model = update_scaler.fit_transform(training_features)
+        training_labels_model = training_labels
 
         # obtain testing features and labels
-        testing_features_before = feature_list[batch]
-        testing_labels_before = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
-        testing_features = update_scaler.transform(testing_features_before)
-        testing_labels = testing_labels_before
+        testing_features_model = update_scaler.transform(testing_features)
         print("testing_features AFTER", testing_features, len(testing_features)) 
         print("training_features AFTER", training_features, len(training_features))
         #print("testing_labels",testing_labels, len(testing_labels))
@@ -85,22 +80,21 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
 
         # Downscaling for data training
         if dataset_name != ALIBABA:
-            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+            training_features_processed, training_labels_processed = downsampling(training_features_model, training_labels_model, random_seed)
+        else:
+            training_features_processed = training_features_model
+            training_labels_processed = training_labels_model
         # training model
         begin_train_fh = time.time()
-        # Hyperparameter tunning energy collection start
         begin_hyperparam_tunning_update = time.time()
         update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
                                                                                           detection, random_seed, batch, param_dist_rf, 
-                                                                                          N_ITER_SEARCH, training_features, 
-                                                                                          training_labels,
+                                                                                          N_ITER_SEARCH, training_features_processed, 
+                                                                                          training_labels_processed,
                                                                                           total_hyperparam_tracker_values, tracker)
-
         end_hyperparam_tunning_update = time.time() - begin_hyperparam_tunning_update
         # Hyperparameter tunning energy collection end
-
-        update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
-
+        update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features_processed, training_labels_processed, total_fit_tracker_values, tracker)
         # Fitting the model energy collection end
         end_train_fh = time.time() - begin_train_fh
         total_hyperparam_fh = total_hyperparam_fh + end_hyperparam_tunning_update
@@ -109,7 +103,7 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
         
         # evaluate model on testing data
         begin_test_fh = time.time()
-        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker)
+        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features_model, total_testing_tracker_values, tracker)
         end_test_fh = time.time() - begin_test_fh
         total_test_fh = total_test_fh + end_test_fh
 
@@ -185,34 +179,37 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
     
         # check if it is the first batch
         if(batch==num_chunks//2):
-            training_features_before = training_features_init
-            training_labels_before = training_labels_init
+            training_features = training_features_init
+            training_labels = training_labels_init
             current_training_batches_list = initial_training_batches_list.copy()
             print('Initial Training Batches', current_training_batches_list)
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
-        training_features = update_scaler.fit_transform(training_features_before)
-        training_labels = training_labels_before
+        training_features_model = update_scaler.fit_transform(training_features)
+        training_labels_model = training_labels
 
         # obtain testing features and labels
-        testing_features_before = feature_list[batch]
-        testing_labels_before = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
-        testing_features = update_scaler.transform(testing_features_before)
-        testing_labels = testing_labels_before
-        print("testing_features AFTER", testing_features, len(testing_features)) 
-        print("training_features AFTER", training_features, len(training_features))
+        testing_features_model = update_scaler.transform(testing_features)
+        print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
+        print("training_features AFTER", training_features_model, len(training_features_model))
         #print("testing_labels",testing_labels, len(testing_labels))
 
         # Downscaling for data training
         if dataset_name != ALIBABA:
-            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+            training_features_processed, training_labels_processed = downsampling(training_features_model, training_labels_model, random_seed)
+        else:
+            training_features_processed = training_features_model
+            training_labels_processed = training_labels_model
+
         # training model
         begin_train_fh_ks_all = time.time()
         if(batch==num_chunks//2 or need_to_retrain == 1):
@@ -220,19 +217,19 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
             begin_hyperparam_tunning_update = time.time()
             update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
                                                                                           detection, random_seed, batch, param_dist_rf, 
-                                                                                          N_ITER_SEARCH, training_features, 
-                                                                                          training_labels,
+                                                                                          N_ITER_SEARCH, training_features_processed, 
+                                                                                          training_labels_processed,
                                                                                           total_hyperparam_tracker_values, tracker)
             end_hyperparam_tunning_update = time.time() - begin_hyperparam_tunning_update
             total_hyperparam_fh_ks_all = total_hyperparam_fh_ks_all + end_hyperparam_tunning_update
 
-            update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
+            update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features_processed, training_labels_processed, total_fit_tracker_values, tracker)
             end_train_fh_ks_all = time.time() - begin_train_fh_ks_all
             total_train_fh_all = total_train_fh_all + end_train_fh_ks_all
         
         # evaluate model on testing data
         begin_test_time_ks_all = time.time()
-        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker)
+        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features_model, total_testing_tracker_values, tracker)
         end_test_time_ks_all = time.time() - begin_test_time_ks_all
         total_test_time_ks_all = total_test_time_ks_all + end_test_time_ks_all
 
@@ -243,13 +240,12 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
         need_to_retrain = 0        
         
         drift_time_start = time.time()
-        drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(dataset_name, type_retraining_data, detection, random_seed, batch, training_features, testing_features, total_distribution_tracker_values, total_stats_tracker_values, tracker)
+        drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(dataset_name, type_retraining_data, detection, random_seed, batch, training_features_processed, testing_features_model, total_distribution_tracker_values, total_stats_tracker_values, tracker)
         drift_time_end = time.time() - drift_time_start
         
         total_distribution_extraction_time = total_distribution_extraction_time + distribution_extraction_time
         total_stat_test_time = total_stat_test_time + ks_test_time
         total_drift_detection_time = total_drift_detection_time + drift_time_end
-        
         detected_drifts.append(drift_alert)
                 
         if(drift_alert==1):
@@ -329,33 +325,35 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     
         # check if it is the first batch
         if(batch==num_chunks//2):
-            training_features_before = training_features_init
-            training_labels_before = training_labels_init
+            training_features = training_features_init
+            training_labels = training_labels_init
             current_training_batches_list = initial_training_batches_list.copy()
             print('Initial Training Batches', current_training_batches_list)
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
-        training_features = update_scaler.fit_transform(training_features_before)
-        training_labels = training_labels_before
+        training_features_model = update_scaler.fit_transform(training_features)
+        training_labels_model = training_labels
 
         # obtain testing features and labels
-        testing_features_before = feature_list[batch]
-        testing_labels_before = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
-        testing_features = update_scaler.transform(testing_features_before)
-        testing_labels = testing_labels_before
-        print("testing_features AFTER", testing_features, len(testing_features)) 
-        print("training_features AFTER", training_features, len(training_features))
+        testing_features_model = update_scaler.transform(testing_features)
+        print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
+        print("training_features AFTER", training_features_model, len(training_features_model))
         #print("testing_labels",testing_labels, len(testing_labels))
         # Downscaling for data training
         if dataset_name != ALIBABA:
-            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+            training_features_processed, training_labels_processed = downsampling(training_features_model, training_labels_model, random_seed)
+        else:
+            training_features_processed = training_features_model
+            training_labels_processed = training_labels_model
     
         begin_train_fh_ks_pca = time.time()
         if(batch==num_chunks//2 or need_to_retrain == 1):
@@ -363,22 +361,21 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
             begin_hyperparam_tunning_update = time.time()
             update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
                                                                                           detection, random_seed, batch, param_dist_rf, 
-                                                                                          N_ITER_SEARCH, training_features, 
-                                                                                          training_labels,
+                                                                                          N_ITER_SEARCH, training_features_processed, 
+                                                                                          training_labels_processed,
                                                                                           total_hyperparam_tracker_values, tracker)
             end_hyperparam_tunning_update = time.time() - begin_hyperparam_tunning_update
             
             total_hyperparam_fh_ks_pca = total_hyperparam_fh_ks_pca + end_hyperparam_tunning_update
             
-            update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
+            update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features_processed, training_labels_processed, total_fit_tracker_values, tracker)
             end_train_fh_ks_pca = time.time() - begin_train_fh_ks_pca
             total_train_fh_pca = total_train_fh_pca + end_train_fh_ks_pca
         
         
         # evaluate model on testing data & measure testing time
         begin_test_time_ks_pca = time.time()
-        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker)
-
+        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features_model, total_testing_tracker_values, tracker)
         end_test_time_ks_pca = time.time() - begin_test_time_ks_pca
         total_test_time_ks_pca = total_test_time_ks_pca + end_test_time_ks_pca
 
@@ -393,22 +390,19 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         
         # Extract PCA Features
         pca_computing_time_start = time.time()
-        df_train_features_sorted_pca, df_test_features_sorted_pca, total_pca_tracker_values =run_pca(dataset_name, type_retraining_data, detection, random_seed, batch, training_features, testing_features, total_pca_tracker_values, tracker)
+        df_train_features_sorted_pca, df_test_features_sorted_pca, total_pca_tracker_values = run_pca(dataset_name, type_retraining_data, detection, random_seed, batch, training_features_processed, testing_features_model, total_pca_tracker_values, tracker)
         pca_computing_time_end = time.time() - pca_computing_time_start
         
 #         # Detect Drift
         drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(dataset_name, type_retraining_data, detection, random_seed, batch, df_train_features_sorted_pca, df_test_features_sorted_pca, total_distribution_tracker_values, total_stats_tracker_values, tracker)
         drift_time_end = time.time() - drift_time_start
-        
         total_distribution_extraction_time = total_distribution_extraction_time + distribution_extraction_time
         total_stat_test_time = total_stat_test_time + ks_test_time
         total_pca_time = total_pca_time + pca_computing_time_end
         total_drift_detection_time = total_drift_detection_time + drift_time_end
-        
         detected_drifts.append(drift_alert)
         
         if(drift_alert==1):
-        
             need_to_retrain = 1
             drift_alert = 0
             no_necessary_retrainings = no_necessary_retrainings + 1
@@ -489,36 +483,37 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         # init drift alert
         drift_alert = 0
     
-        # check if it is the first batch
         if(batch==num_chunks//2):
-            training_features_before = training_features_init
-            training_labels_before = training_labels_init
+            training_features = training_features_init
+            training_labels = training_labels_init
             current_training_batches_list = initial_training_batches_list.copy()
             print('Initial Training Batches', current_training_batches_list)
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
-        training_features = update_scaler.fit_transform(training_features_before)
-        training_labels = training_labels_before
+        training_features_model = update_scaler.fit_transform(training_features)
+        training_labels_model = training_labels
 
         # obtain testing features and labels
-        testing_features_before = feature_list[batch]
-        testing_labels_before = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        testing_features = feature_list[batch]
+        testing_labels = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
-        testing_features = update_scaler.transform(testing_features_before)
-        testing_labels = testing_labels_before
-        print("testing_features AFTER", testing_features, len(testing_features)) 
-        print("training_features AFTER", training_features, len(training_features))
+        testing_features_model = update_scaler.transform(testing_features)
+        print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
+        print("training_features AFTER", training_features_model, len(training_features_model))
         #print("testing_labels",testing_labels, len(testing_labels))
-
         # Downscaling for data training
+               # Downscaling for data training
         if dataset_name != ALIBABA:
-            training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+            training_features_processed, training_labels_processed = downsampling(training_features_model, training_labels_model, random_seed)
+        else:
+            training_features_processed = training_features_model
+            training_labels_processed = training_labels_model
 
         # training model
         begin_train_fh_ks_fi = time.time()
@@ -527,13 +522,13 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
             begin_hyperparam_tunning_update = time.time()
             update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
                                                                                           detection, random_seed, batch, param_dist_rf, 
-                                                                                          N_ITER_SEARCH, training_features, 
-                                                                                          training_labels,
+                                                                                          N_ITER_SEARCH, training_features_processed, 
+                                                                                          training_labels_processed,
                                                                                           total_hyperparam_tracker_values, tracker)
             end_hyperparam_tunning_update = time.time() - begin_hyperparam_tunning_update
             total_hyperparam_fh_ks_fi = total_hyperparam_fh_ks_fi + end_hyperparam_tunning_update
             
-            update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features, training_labels, total_fit_tracker_values, tracker)
+            update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features_processed, training_labels_processed, total_fit_tracker_values, tracker)
             end_train_fh_ks_fi = time.time() - begin_train_fh_ks_fi
             total_train_fh_fi = total_train_fh_fi + end_train_fh_ks_fi
         
@@ -541,7 +536,7 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
 #         # evaluate model on testing data
         
         begin_test_time_ks_fi = time.time()
-        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker)
+        predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features_model, total_testing_tracker_values, tracker)
         end_test_time_ks_fi = time.time() - begin_test_time_ks_fi
         total_test_time_ks_fi = total_test_time_ks_fi + end_test_time_ks_fi
         
@@ -549,18 +544,15 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         predictions_test_ks_fi_model = np.concatenate([predictions_test_ks_fi_model, predictions_test_updated])
         
 
-         # Drift Detection
-        
+        # Drift Detection
         need_to_retrain = 0
         drift_time_start = time.time()
         # Extract Most Important Features
         feature_importance_extraction_start = time.time()  
-        important_features, training_important_features_model, testing_important_features_model, total_fi_tracker_values = get_fi(dataset_name, type_retraining_data, detection, random_seed, batch, tracker, total_fi_tracker_values, update_model, training_features, testing_features, features_disk_failure)
+        important_features, training_important_features_model, testing_important_features_model, total_fi_tracker_values = get_fi(dataset_name, type_retraining_data, detection, random_seed, batch, tracker, total_fi_tracker_values, update_model, training_features_processed, testing_features_model, features_disk_failure)
         feature_importance_extraction_end = time.time() - feature_importance_extraction_start
         
-        
         # Detect Drift
-
         drift_alert, distribution_extraction_time, ks_test_time, total_distribution_tracker_values, total_stats_tracker_values = ks_drift_detection(dataset_name, type_retraining_data, detection, random_seed, batch, training_important_features_model, testing_important_features_model, total_distribution_tracker_values, total_stats_tracker_values, tracker)
         drift_time_end = time.time() - drift_time_start
         
@@ -586,9 +578,6 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         
             training_features = np.vstack(training_features_list_updated)
             training_labels = np.hstack(training_labels_list_updated)
-
-
-    
     
     columns_names =['Random_Seed', 'Model', 'Drifts_Overall',  'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 
     'ROC_AUC_Total', 'Predictions', 'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 

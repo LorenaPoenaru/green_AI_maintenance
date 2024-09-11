@@ -176,7 +176,7 @@ def set_name_tracker_for_task(dataset_name, type_retraining_data, detection, tas
     return str(dataset_name) + "_" + str(type_retraining_data) + "_" + str(detection) + "_" + str(task) + "_RandomSeed_" + str(random_seed) + "_Batch" + str(batch)
 
 def initiate_tracker_var():
-    return {'cpu': 0, 'gpu': 0, 'ram':0, 'duration':0}
+    return {'energy_consumed': 0, 'emissions': 0, 'cpu': 0, 'gpu': 0, 'ram':0, 'duration':0, }
 
 def initiate_tracker_variables():    
     total_hyperparam_tracker_values = initiate_tracker_var()
@@ -232,10 +232,13 @@ def hyperparameter_tuning_process(dataset_name, type_retraining_data, detection,
     random_search.fit(training_features_downsampling, training_labels_downsampling)
     update_model = random_search.best_estimator_
     hyperparameter_tuning_emissions = tracker.stop_task()
+    total_hyperparam_tracker_values['energy_consumed'] += hyperparameter_tuning_emissions.energy_consumed
+    total_hyperparam_tracker_values['emissions'] += hyperparameter_tuning_emissions.emissions
     total_hyperparam_tracker_values['cpu'] += hyperparameter_tuning_emissions.cpu_energy
     total_hyperparam_tracker_values['gpu'] += hyperparameter_tuning_emissions.gpu_energy
     total_hyperparam_tracker_values['ram'] += hyperparameter_tuning_emissions.ram_energy
     total_hyperparam_tracker_values['duration'] += hyperparameter_tuning_emissions.duration
+    
     return update_model, total_hyperparam_tracker_values
 
 
@@ -243,16 +246,21 @@ def best_model_fit(dataset_name, type_retraining_data, detection, random_seed, b
     tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "ModelFit", random_seed, batch))
     update_model.fit(training_features, training_labels)
     model_fit_emissions = tracker.stop_task()
+    total_fit_tracker_values['energy_consumed'] += model_fit_emissions.energy_consumed
+    total_fit_tracker_values['emissions'] += model_fit_emissions.emissions
     total_fit_tracker_values['cpu'] += model_fit_emissions.cpu_energy
     total_fit_tracker_values['gpu'] += model_fit_emissions.gpu_energy
     total_fit_tracker_values['ram'] += model_fit_emissions.ram_energy
     total_fit_tracker_values['duration'] += model_fit_emissions.duration
+    
     return update_model, total_fit_tracker_values
 
 def get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker):
     tracker.start_task(set_name_tracker_for_task(dataset_name, type_retraining_data, detection, "Testing", random_seed, batch))
     predictions_test_updated = update_model.predict(testing_features)
     testing_emissions = tracker.stop_task()
+    total_testing_tracker_values['energy_consumed'] += testing_emissions.energy_consumed
+    total_testing_tracker_values['emissions'] += testing_emissions.emissions
     total_testing_tracker_values['cpu'] += testing_emissions.cpu_energy
     total_testing_tracker_values['gpu'] += testing_emissions.gpu_energy
     total_testing_tracker_values['ram'] += testing_emissions.ram_energy
@@ -266,6 +274,8 @@ def distribution_extraction(reference_data, testing_data, dataset_name, type_ret
     distribution_test = sns.distplot(np.array(testing_data)).get_lines()[0].get_data()[1]
     plt.close()
     distribution_emissions = tracker.stop_task()
+    total_distribution_tracker_values['energy_consumed'] += distribution_emissions.energy_consumed
+    total_distribution_tracker_values['emissions'] += distribution_emissions.emissions
     total_distribution_tracker_values['cpu'] += distribution_emissions.cpu_energy
     total_distribution_tracker_values['gpu'] += distribution_emissions.gpu_energy
     total_distribution_tracker_values['ram'] += distribution_emissions.ram_energy
@@ -302,6 +312,8 @@ def ks_stats(dataset_name, type_retraining_data, detection, random_seed, batch, 
     stat_test = stats.kstest
     v, p = stat_test(distribution_reference, distribution_test)
     stats_emissions = tracker.stop_task()
+    total_stats_tracker_values['energy_consumed'] += stats_emissions.energy_consumed
+    total_stats_tracker_values['emissions'] += stats_emissions.emissions
     total_stats_tracker_values['cpu'] += stats_emissions.cpu_energy
     total_stats_tracker_values['gpu'] += stats_emissions.gpu_energy
     total_stats_tracker_values['ram'] += stats_emissions.ram_energy
@@ -316,6 +328,8 @@ def run_pca(dataset_name, type_retraining_data, detection, random_seed, batch, t
     df_train_features_sorted_pca = pca.transform(training_features)
     df_test_features_sorted_pca = pca.transform(testing_features)
     pca_emissions = tracker.stop_task()
+    total_pca_tracker_values['energy_consumed'] += pca_emissions.energy_consumed
+    total_pca_tracker_values['emissions'] += pca_emissions.emissions
     total_pca_tracker_values['cpu'] += pca_emissions.cpu_energy
     total_pca_tracker_values['gpu'] += pca_emissions.gpu_energy
     total_pca_tracker_values['ram'] += pca_emissions.ram_energy
@@ -329,6 +343,8 @@ def get_fi(dataset_name, type_retraining_data, detection, random_seed, batch, tr
     training_important_features_model = filtering_non_important_features(training_features, features_disk_failure, important_features)
     testing_important_features_model = filtering_non_important_features(testing_features, features_disk_failure, important_features)
     fi_emissions = tracker.stop_task()
+    total_fi_tracker_values['energy_consumed'] += fi_emissions.energy_consumed
+    total_fi_tracker_values['emissions'] += fi_emissions.emissions
     total_fi_tracker_values['cpu'] += fi_emissions.cpu_energy
     total_fi_tracker_values['gpu'] += fi_emissions.gpu_energy
     total_fi_tracker_values['ram'] += fi_emissions.ram_energy
