@@ -242,14 +242,6 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     
         # check if it is the first batch
         if(batch==num_chunks//2):
-        training_features_init = np.vstack(feature_list[0: batch])
-        training_labels_init = np.hstack(label_list[0//2: batch])
-        
-        # init drift alert
-        drift_alert = 0
-    
-        # check if it is the first batch
-        if(batch==num_chunks//2):
             training_features = training_features_init
             training_labels = training_labels_init
             current_training_batches_list = initial_training_batches_list.copy()
