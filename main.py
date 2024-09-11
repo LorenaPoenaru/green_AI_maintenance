@@ -32,7 +32,14 @@ def main():
     num_chunks = len(feature_list)
     true_testing_labels = np.hstack(label_list[num_chunks//2:])
     initial_training_batches_list = list(range(0, num_chunks//2))
-        
+
+    print("true_testing_labels", true_testing_labels)
+    print("len true testing labels", len(true_testing_labels))
+
+    print("initial_training_batches_list", initial_training_batches_list)
+
+    
+
     # Hyperparameter tuning parameter
     param_dist_rf = {
                 'n_estimators': stats.randint(1e1, 1e2),
@@ -50,7 +57,7 @@ def main():
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
 
-    configurations =  [("FullHistory","KS-ALL")]#[("FullHistory", "Periodic"), ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
+    configurations =  [("FullHistory", "Periodic"), ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
     counter = {}
     for configuration in configurations:
         counter[configuration] = TOTAL_NUMBER_SEEDS
@@ -63,6 +70,7 @@ def main():
         type_retraining_data = configuration[0]
         detection = configuration[1]
         random_seed = random_seeds[counter[configuration]-1]
+        print("Random seed:", random_seed)
         if type_retraining_data == "SlidingWindow":
             if detection == "Periodic":
                 sliding_window.pipeline_periodic_model(dataset_name, type_retraining_data, detection, random_seed,feature_list, label_list, num_chunks, param_dist_rf, N_ITER_SEARCH, true_testing_labels, initial_training_batches_list)

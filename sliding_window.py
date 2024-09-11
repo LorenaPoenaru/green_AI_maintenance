@@ -47,13 +47,42 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
     ### Tracker tasks variables 
     tracker = EmissionsTracker(project_name="AI_maintenance_" + str(experiment_name))
     total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values = initiate_tracker_variables()
-    training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
+    
     begin_total_fh = time.time()
     for batch in tqdm(range(num_chunks//2, num_chunks)):
-        # obtain features and labels
-        testing_features, testing_labels = get_testing_features_and_labels_from_lists(feature_list, label_list, batch)
-        # scaling data
-        training_features, testing_features = scaling_data(training_features, testing_features)
+        training_features_init = np.vstack(feature_list[0: batch])
+        training_labels_init = np.hstack(label_list[0//2: batch])
+        
+        # init drift alert
+        drift_alert = 0
+    
+        # check if it is the first batch
+        if(batch==num_chunks//2):
+            training_features_before = training_features_init
+            training_labels_before = training_labels_init
+            current_training_batches_list = initial_training_batches_list.copy()
+            print('Initial Training Batches', current_training_batches_list)
+        
+
+        print("BATCH", batch)
+        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        # scaler for training data
+        update_scaler = StandardScaler()
+        training_features = update_scaler.fit_transform(training_features_before)
+        training_labels = training_labels_before
+
+        # obtain testing features and labels
+        testing_features_before = feature_list[batch]
+        testing_labels_before = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        
+        # scaling testing features
+        testing_features = update_scaler.transform(testing_features_before)
+        testing_labels = testing_labels_before
+        print("testing_features AFTER", testing_features, len(testing_features)) 
+        print("training_features AFTER", training_features, len(training_features))
+        #print("testing_labels",testing_labels, len(testing_labels))
+
         # Downscaling for data training
         if dataset_name != ALIBABA:
             training_features, training_labels = downsampling(training_features, training_labels, random_seed)
@@ -116,15 +145,20 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     ### Tracker tasks variables 
     tracker = EmissionsTracker(project_name="AI_maintenance_" + str(experiment_name))
     total_hyperparam_tracker_values, total_fit_tracker_values, total_testing_tracker_values = initiate_tracker_variables()
-    training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
+    #training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
 
+    training_features_before = np.vstack(feature_list[0: num_chunks//2])
+    training_labels_before = np.hstack(label_list[0: num_chunks//2])
     # scaling training data
     scaler = StandardScaler()
-    training_features = scaler.fit_transform(training_features)
+    training_features_scaled= scaler.fit_transform(training_features_before)
 
     # downsampling training data
     if dataset_name != ALIBABA:
-        training_features, training_labels = downsampling(training_features, training_labels, random_seed)
+        training_features, training_labels = downsampling(training_features_scaled, training_labels_before, random_seed)
+    else:
+        training_features = training_features_scaled
+        training_labels = training_labels_before
 
 
     begin_train_time_static = time.time()
@@ -145,9 +179,13 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     begin_test_time_static = time.time()
     for batch in tqdm(range(num_chunks//2, num_chunks)):
         # obtain features and labels
-        testing_features, testing_labels = get_testing_features_and_labels_from_lists(feature_list, label_list, batch)
+        #testing_features, testing_labels = get_testing_features_and_labels_from_lists(feature_list, label_list, batch)
+        # obtain testing features and labels
+        testing_features_before = feature_list[batch]
+        testing_labels = label_list[batch]
+
         # scaling testing features
-        testing_features = scaler.transform(testing_features)
+        testing_features = scaler.transform(testing_features_before)
         # evaluate model on testing data
         begin_test_time_static = time.time()
         predictions_test_updated, total_testing_tracker_values = get_predictions(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, testing_features, total_testing_tracker_values, tracker)
@@ -278,19 +316,41 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     total_distribution_tracker_values = initiate_tracker_var()
     total_stats_tracker_values = initiate_tracker_var()
     
-
-    training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
-    current_training_batches_list = initial_training_batches_list.copy()
-    print('Initial Training Batches', current_training_batches_list)
     #need_to_retrain = 0
     for batch in tqdm(range(num_chunks//2, num_chunks)):
-        print('Current Training Batches', current_training_batches_list)     
+        training_features_init = np.vstack(feature_list[0: batch])
+        training_labels_init = np.hstack(label_list[0//2: batch])
+        
         # init drift alert
         drift_alert = 0
-        # obtain features and labels
-        testing_features, testing_labels = get_testing_features_and_labels_from_lists(feature_list, label_list, batch)
-        # scaling data
-        training_features, testing_features = scaling_data(training_features, testing_features)
+    
+        # check if it is the first batch
+        if(batch==num_chunks//2):
+            training_features_before = training_features_init
+            training_labels_before = training_labels_init
+            current_training_batches_list = initial_training_batches_list.copy()
+            print('Initial Training Batches', current_training_batches_list)
+        
+
+        print("BATCH", batch)
+        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        # scaler for training data
+        update_scaler = StandardScaler()
+        training_features = update_scaler.fit_transform(training_features_before)
+        training_labels = training_labels_before
+
+        # obtain testing features and labels
+        testing_features_before = feature_list[batch]
+        testing_labels_before = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        
+        # scaling testing features
+        testing_features = update_scaler.transform(testing_features_before)
+        testing_labels = testing_labels_before
+        print("testing_features AFTER", testing_features, len(testing_features)) 
+        print("training_features AFTER", training_features, len(training_features))
+        #print("testing_labels",testing_labels, len(testing_labels))
+
         # Downscaling for data training
         if dataset_name != ALIBABA:
             training_features, training_labels = downsampling(training_features, training_labels, random_seed)
@@ -395,16 +455,41 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     total_stats_tracker_values = initiate_tracker_var()
     total_pca_tracker_values = initiate_tracker_var()
     
-    training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
-    current_training_batches_list = initial_training_batches_list.copy()
     #need_to_retrain = 0
     for batch in tqdm(range(num_chunks//2, num_chunks)):
+        training_features_init = np.vstack(feature_list[0: batch])
+        training_labels_init = np.hstack(label_list[0//2: batch])
+        
         # init drift alert
         drift_alert = 0
-        # obtain features and labels
-        testing_features, testing_labels = get_testing_features_and_labels_from_lists(feature_list, label_list, batch)
-        # scaling data
-        training_features, testing_features = scaling_data(training_features, testing_features)
+    
+        # check if it is the first batch
+        if(batch==num_chunks//2):
+            training_features_before = training_features_init
+            training_labels_before = training_labels_init
+            current_training_batches_list = initial_training_batches_list.copy()
+            print('Initial Training Batches', current_training_batches_list)
+        
+
+        print("BATCH", batch)
+        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        # scaler for training data
+        update_scaler = StandardScaler()
+        training_features = update_scaler.fit_transform(training_features_before)
+        training_labels = training_labels_before
+
+        # obtain testing features and labels
+        testing_features_before = feature_list[batch]
+        testing_labels_before = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        
+        # scaling testing features
+        testing_features = update_scaler.transform(testing_features_before)
+        testing_labels = testing_labels_before
+        print("testing_features AFTER", testing_features, len(testing_features)) 
+        print("training_features AFTER", training_features, len(training_features))
+        #print("testing_labels",testing_labels, len(testing_labels))
+
         # Downscaling for data training
         if dataset_name != ALIBABA:
             training_features, training_labels = downsampling(training_features, training_labels, random_seed)
@@ -530,17 +615,42 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
     total_stats_tracker_values = initiate_tracker_var()
     total_fi_tracker_values = initiate_tracker_var()
     
-    training_features, training_labels = initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks)
-    current_training_batches_list = initial_training_batches_list.copy()
+    
     #need_to_retrain = 0
     for batch in tqdm(range(num_chunks//2, num_chunks)):
-       # init drift alert
-        drift_alert = 0
+        training_features_init = np.vstack(feature_list[0: batch])
+        training_labels_init = np.hstack(label_list[0//2: batch])
         
-        # obtain features and labels
-        testing_features, testing_labels = get_testing_features_and_labels_from_lists(feature_list, label_list, batch)
-        # scaling data
-        training_features, testing_features = scaling_data(training_features, testing_features)
+        # init drift alert
+        drift_alert = 0
+    
+        # check if it is the first batch
+        if(batch==num_chunks//2):
+            training_features_before = training_features_init
+            training_labels_before = training_labels_init
+            current_training_batches_list = initial_training_batches_list.copy()
+            print('Initial Training Batches', current_training_batches_list)
+        
+
+        print("BATCH", batch)
+        print("training_features BEFORE SCALING", training_features_before, len(training_features_before))
+        # scaler for training data
+        update_scaler = StandardScaler()
+        training_features = update_scaler.fit_transform(training_features_before)
+        training_labels = training_labels_before
+
+        # obtain testing features and labels
+        testing_features_before = feature_list[batch]
+        testing_labels_before = label_list[batch]
+        print("testing_features BEFORE SCALING", testing_features_before, len(testing_features_before)) 
+        
+        # scaling testing features
+        testing_features = update_scaler.transform(testing_features_before)
+        testing_labels = testing_labels_before
+        print("testing_features AFTER", testing_features, len(testing_features)) 
+        print("training_features AFTER", training_features, len(training_features))
+        #print("testing_labels",testing_labels, len(testing_labels))
+
         # Downscaling for data training
         if dataset_name != ALIBABA:
             training_features, training_labels = downsampling(training_features, training_labels, random_seed)

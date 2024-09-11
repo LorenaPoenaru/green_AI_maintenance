@@ -22,6 +22,9 @@ import random
 from utilities import obtain_period_data, obtain_metrics
 
 
+
+
+
 def obtain_intervals(dataset):
     '''
     Generate interval terminals, so that samples in each interval have:
@@ -183,23 +186,30 @@ def initiate_tracker_variables():
 
 def initiate_training_features_and_labels_from_lists(feature_list, label_list, num_chunks):
     # obtain training features and labels
+    print("num_chunks", num_chunks)
     training_features = np.vstack(feature_list[0: num_chunks//2])
     training_labels = np.hstack(label_list[0//2: num_chunks//2])
     return training_features, training_labels
 
 
 def get_testing_features_and_labels_from_lists(feature_list, label_list, batch):
+    print("BATCH:", batch)
     testing_features = feature_list[batch]
-    testing_labels = label_list[batch] 
+    testing_labels = label_list[batch]
+    #print("testing_features", testing_features, len(testing_features)) 
+    #print("testing_labels",testing_labels, len(testing_labels))
     return testing_features, testing_labels
 
-def scaling_data(training_features, testing_features):
-    # scaler for training data
-    update_scaler = StandardScaler()
-    training_features = update_scaler.fit_transform(training_features)
-    # scaling testing features
-    testing_features = update_scaler.transform(testing_features)
-    return training_features, testing_features
+# def scaling_data(training_features, testing_features):
+#     print("inside BEFORE scaler testing_features", testing_features, len(testing_features))
+#     # scaler for training data
+#     update_scaler = StandardScaler()
+#     training_features_model = update_scaler.fit_transform(training_features)
+#     # scaling testing features
+#     testing_features_model = update_scaler.transform(testing_features)
+#     print("inside AFTER scaler testing_features", testing_features_model, len(testing_features_model))
+
+#     return training_features_model, testing_features_model
 
 
 def format_data_for_the_seed(columns_names, values):    
