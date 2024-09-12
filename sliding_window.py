@@ -158,14 +158,14 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     begin_train_time_static = time.time()
     begin_hyperparam_tunning_static = time.time()
     update_model, total_hyperparam_tracker_values = hyperparameter_tuning_process(dataset_name, type_retraining_data, 
-                                                                                          detection, random_seed, batch, param_dist_rf, 
+                                                                                          detection, random_seed, "Static", param_dist_rf, 
                                                                                           N_ITER_SEARCH, training_features_processed, 
                                                                                           training_labels_processed,
                                                                                           total_hyperparam_tracker_values, tracker)
     end_hyperparam_tunning_static = time.time() - begin_hyperparam_tunning_static
     
     # Training
-    update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, batch, update_model, training_features_processed, training_labels_processed, total_fit_tracker_values, tracker)
+    update_model, total_fit_tracker_values = best_model_fit(dataset_name, type_retraining_data, detection, random_seed, "Static", update_model, training_features_processed, training_labels_processed, total_fit_tracker_values, tracker)
     end_train_time_static = time.time() - begin_train_time_static
 
     predictions_test_static_model = []
