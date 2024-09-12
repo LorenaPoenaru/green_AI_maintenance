@@ -191,6 +191,14 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
         update_scaler = StandardScaler()
         training_features_model = update_scaler.fit_transform(training_features)
         training_labels_model = training_labels
+        print("training_features AFTER", training_features_model, len(training_features_model))
+
+        # Downscaling for data training
+        if dataset_name != ALIBABA:
+            training_features_processed, training_labels_processed = downsampling(training_features_model, training_labels_model, random_seed)
+        else:
+            training_features_processed = training_features_model
+            training_labels_processed = training_labels_model
 
         # obtain testing features and labels
         testing_features = feature_list[batch]
@@ -199,16 +207,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
         
         # scaling testing features
         testing_features_model = update_scaler.transform(testing_features)
-        print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
-        print("training_features AFTER", training_features_model, len(training_features_model))
-        #print("testing_labels",testing_labels, len(testing_labels))
-
-        # Downscaling for data training
-        if dataset_name != ALIBABA:
-            training_features_processed, training_labels_processed = downsampling(training_features_model, training_labels_model, random_seed)
-        else:
-            training_features_processed = training_features_model
-            training_labels_processed = training_labels_model
+        testing_labels_model = testing_labels
+        print("testing_features AFTER SCALING", testing_features_model, len(testing_features_model)) 
 
         # training model
         begin_train_fh_ks_all = time.time()
@@ -233,7 +233,7 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
         end_test_time_ks_all = time.time() - begin_test_time_ks_all
         total_test_time_ks_all = total_test_time_ks_all + end_test_time_ks_all
 
-        partial_roc_auc_ks_all_model.append(roc_auc_score(testing_labels, predictions_test_updated)) 
+        partial_roc_auc_ks_all_model.append(roc_auc_score(testing_labels_model, predictions_test_updated)) 
         predictions_test_ks_all_model = np.concatenate([predictions_test_ks_all_model, predictions_test_updated])
         
         # Drift Detection
