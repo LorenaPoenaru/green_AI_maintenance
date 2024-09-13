@@ -113,16 +113,16 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
     
     columns_names =['Random_Seed', 'Model', 'Drifts', 'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 'ROC_AUC_Total', 
     'Predictions', 'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 'Test_Time', 'Drifts_Detected', 'Label_Costs',
-    'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
-    'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
-    'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing']
+    'Energy_Consumed_Hyperparameter', 'Emissions_Hyperparameter', 'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
+    'Energy_Consumed_Fitting','Emissions_Fitting', 'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
+    'Energy_Consumed_Testing', 'Emissions_Testing', 'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing']
     values =  [random_seed, 'periodic-sw', str(int(num_chunks//2)) + '/' + str(int(num_chunks//2)), 
     partial_roc_auc_fh, np.mean(partial_roc_auc_fh), roc_auc_score(true_testing_labels, predictions_test_fh), 
     predictions_test_fh, true_testing_labels,  total_train_fh, total_hyperparam_fh, total_test_fh, np.ones(int(num_chunks//2), dtype=int), 
     len(true_testing_labels),
-    total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
-    total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
-    total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration']
+    total_hyperparam_tracker_values['energy_consumed'], total_hyperparam_tracker_values['emissions'], total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
+    total_fit_tracker_values['energy_consumed'], total_fit_tracker_values['emissions'], total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
+    total_testing_tracker_values['energy_consumed'], total_testing_tracker_values['emissions'], total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration']
     ]
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
     store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
@@ -193,16 +193,16 @@ def pipeline_static_model(dataset_name, type_retraining_data, detection, random_
     
     columns_names =['Random_Seed', 'Model', 'Drifts', 'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 'ROC_AUC_Total', 'Predictions', 
     'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 'Test_Time', 'Drifts_Detected', 'Label_Costs',
-    'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
-    'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
-    'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing']
+    'Energy_Consumed_Hyperparameter', 'Emissions_Hyperparameter', 'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
+    'Energy_Consumed_Fitting','Emissions_Fitting', 'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
+    'Energy_Consumed_Testing', 'Emissions_Testing', 'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing']
     values = [random_seed, 'static', '0/' + str(int(num_chunks//2)), partial_roc_auc, np.mean(partial_roc_auc), 
     roc_auc_score(true_testing_labels, predictions_test_static_model), predictions_test_static_model, 
     true_testing_labels, end_train_time_static, end_hyperparam_tunning_static, total_test_static, 
     np.zeros(int(num_chunks//2), dtype=int), 0.0,
-    total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
-    total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
-    total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration']
+    total_hyperparam_tracker_values['energy_consumed'], total_hyperparam_tracker_values['emissions'], total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
+    total_fit_tracker_values['energy_consumed'], total_fit_tracker_values['emissions'], total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
+    total_testing_tracker_values['energy_consumed'], total_testing_tracker_values['emissions'], total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration']
     ]
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
     store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
@@ -326,22 +326,22 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
     columns_names = ['Random_Seed', 'Model', 'Drifts_Overall',  'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 'ROC_AUC_Total', 
                      'Predictions', 'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 'Test_Time', 
                      'Drifts_Detected', 'Drift_Detection_Total_Time', 'Distribution_Extraction_Time', 'Statistical_Test_Time', 'Label_Costs', 
-                     'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
-                     'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
-                     'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing',
-                     'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
-                     'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test'
+                     'Energy_Consumed_Hyperparameter', 'Emissions_Hyperparameter', 'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
+                     'Energy_Consumed_Fitting','Emissions_Fitting', 'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
+                     'Energy_Consumed_Testing', 'Emissions_Testing', 'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing'
+                     'Energy_Consumed_Distribution_Extraction', 'Emissions_Distribution_Extraction', 'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
+                     'Energy_Consumed_Stats_Test', 'Emissions_Stats_Test', 'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test'
                      ]
     values = [random_seed, detection, str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), partial_roc_auc_ks_all_model, 
               np.mean(partial_roc_auc_ks_all_model), roc_auc_score(true_testing_labels, predictions_test_ks_all_model), 
               predictions_test_ks_all_model, true_testing_labels, total_train_all, total_hyperparam_ks_all, 
               total_test_time_ks_all, detected_drifts, total_drift_detection_time, total_distribution_extraction_time, 
               total_stat_test_time, necessary_label_annotation_effort,
-              total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
-              total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
-              total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration'],
-              total_distribution_tracker_values['cpu'], total_distribution_tracker_values['gpu'], total_distribution_tracker_values['ram'], total_distribution_tracker_values['duration'],
-              total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration']]
+              total_hyperparam_tracker_values['energy_consumed'], total_hyperparam_tracker_values['emissions'], total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
+              total_fit_tracker_values['energy_consumed'], total_fit_tracker_values['emissions'], total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
+              total_testing_tracker_values['energy_consumed'], total_testing_tracker_values['emissions'], total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration'],
+              total_distribution_tracker_values['energy_consumed'], total_distribution_tracker_values['emissions'], total_distribution_tracker_values['cpu'], total_distribution_tracker_values['gpu'], total_distribution_tracker_values['ram'], total_distribution_tracker_values['duration'],
+              total_stats_tracker_values['energy_consumed'], total_stats_tracker_values['emissions'], total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration']]
     
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
     store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
@@ -485,12 +485,13 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 
     'Test_Time', 'Drifts_Detected', 'Drift_Detection_Total_Time', 
     'PCA_Computing_time', 'Distribution_Extraction_Time', 'Statistical_Test_Time', 'Label_Costs',
-    'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
-    'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
-    'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing',
-    'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
-    'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test',
-    'CPU_Energy_PCA', 'GPU_Energy_PCA', 'RAM_Energy_PCA', 'Duration_Tracker_PCA']
+    'Energy_Consumed_Hyperparameter', 'Emissions_Hyperparameter', 'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
+    'Energy_Consumed_Fitting','Emissions_Fitting', 'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
+    'Energy_Consumed_Testing', 'Emissions_Testing', 'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing',
+    'Energy_Consumed_Distribution_Extraction', 'Emissions_Distribution_Extraction', 'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
+    'Energy_Consumed_Stats_Test', 'Emissions_Stats_Test', 'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test',
+    'Energy_Consumed_PCA', 'Emissions_PCA', 'CPU_Energy_PCA', 'GPU_Energy_PCA', 'RAM_Energy_PCA', 'Duration_Tracker_PCA'
+    ]
     values=[random_seed, 'KS_PCA', str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), 
     partial_roc_auc_ks_pca_model, np.mean(partial_roc_auc_ks_pca_model), 
     roc_auc_score(true_testing_labels, predictions_test_ks_pca_model), 
@@ -498,12 +499,12 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
     total_hyperparam_ks_pca, total_test_time_ks_pca, detected_drifts, 
     total_drift_detection_time, total_pca_time, total_distribution_extraction_time, 
     total_stat_test_time, necessary_label_annotation_effort,
-    total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'],    
-    total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
-    total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration'],
-    total_distribution_tracker_values['cpu'], total_distribution_tracker_values['gpu'], total_distribution_tracker_values['ram'], total_distribution_tracker_values['duration'],
-    total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration'],
-    total_pca_tracker_values['cpu'], total_pca_tracker_values['gpu'], total_pca_tracker_values['ram'], total_pca_tracker_values['duration']]
+    total_hyperparam_tracker_values['energy_consumed'], total_hyperparam_tracker_values['emissions'], total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
+    total_fit_tracker_values['energy_consumed'], total_fit_tracker_values['emissions'], total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
+    total_testing_tracker_values['energy_consumed'], total_testing_tracker_values['emissions'], total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration'],
+    total_distribution_tracker_values['energy_consumed'], total_distribution_tracker_values['emissions'], total_distribution_tracker_values['cpu'], total_distribution_tracker_values['gpu'], total_distribution_tracker_values['ram'], total_distribution_tracker_values['duration'],
+    total_stats_tracker_values['energy_consumed'], total_stats_tracker_values['emissions'], total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration'],
+    total_pca_tracker_values['energy_consumed'], total_pca_tracker_values['emissions'], total_pca_tracker_values['cpu'], total_pca_tracker_values['gpu'], total_pca_tracker_values['ram'], total_pca_tracker_values['duration']]
 
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
     store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
@@ -640,22 +641,22 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
     columns_names =['Random_Seed', 'Model', 'Drifts_Overall',  'ROC_AUC_Batch', 'ROC_AUC_BATCH_MEAN', 'ROC_AUC_Total', 'Predictions', 
     'True_Testing_Labels', 'Train_Time', 'Hyperparam_Tunning_Time', 'Test_Time', 'Drifts_Detected', 'Drift_Detection_Total_Time', 
     'FI_Extraction_Time', 'Distribution_Extraction_Time', 'Statistical_Test_Time', 'Label_Costs',
-    'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
-    'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
-    'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing',
-    'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
-    'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test',
-    'CPU_Energy_FI', 'GPU_Energy_FI', 'RAM_Energy_FI', 'Duration_Tracker_FI']
+    'Energy_Consumed_Hyperparameter', 'Emissions_Hyperparameter', 'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
+    'Energy_Consumed_Fitting','Emissions_Fitting', 'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
+    'Energy_Consumed_Testing', 'Emissions_Testing', 'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing',
+    'Energy_Consumed_Distribution_Extraction', 'Emissions_Distribution_Extraction', 'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
+    'Energy_Consumed_Stats_Test', 'Emissions_Stats_Test', 'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test',
+    'Energy_Consumed_FI', 'Emissions_FI', 'CPU_Energy_FI', 'GPU_Energy_FI', 'RAM_Energy_FI', 'Duration_Tracker_FI']
     values= [random_seed, 'KS_FI', str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), partial_roc_auc_ks_fi_model, np.mean(partial_roc_auc_ks_fi_model), 
     roc_auc_score(true_testing_labels, predictions_test_ks_fi_model), predictions_test_ks_fi_model, true_testing_labels, 
     total_train_fi, total_hyperparam_ks_fi, total_test_time_ks_fi, detected_drifts, total_drift_detection_time, total_feature_importance_extraction_time, 
     total_distribution_extraction_time, total_stat_test_time, necessary_label_annotation_effort,
-    total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'],    
-    total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
-    total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration'],
-    total_distribution_tracker_values['cpu'], total_distribution_tracker_values['gpu'], total_distribution_tracker_values['ram'], total_distribution_tracker_values['duration'],
-    total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration'],
-    total_fi_tracker_values['cpu'], total_fi_tracker_values['gpu'], total_fi_tracker_values['ram'], total_fi_tracker_values['duration']]
+    total_hyperparam_tracker_values['energy_consumed'], total_hyperparam_tracker_values['emissions'], total_hyperparam_tracker_values['cpu'], total_hyperparam_tracker_values['gpu'], total_hyperparam_tracker_values['ram'], total_hyperparam_tracker_values['duration'], 
+    total_fit_tracker_values['energy_consumed'], total_fit_tracker_values['emissions'], total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
+    total_testing_tracker_values['energy_consumed'], total_testing_tracker_values['emissions'], total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration'],
+    total_distribution_tracker_values['energy_consumed'], total_distribution_tracker_values['emissions'], total_distribution_tracker_values['cpu'], total_distribution_tracker_values['gpu'], total_distribution_tracker_values['ram'], total_distribution_tracker_values['duration'],
+    total_stats_tracker_values['energy_consumed'], total_stats_tracker_values['emissions'], total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration'],
+    total_fi_tracker_values['energy_consumed'], total_fi_tracker_values['emissions'], total_fi_tracker_values['cpu'], total_fi_tracker_values['gpu'], total_fi_tracker_values['ram'], total_fi_tracker_values['duration']]
     
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
     store_into_file('./results/Output_' + str(experiment_name), df_results_for_seed)
