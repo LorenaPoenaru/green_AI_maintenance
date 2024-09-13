@@ -11,7 +11,7 @@ ALIBABA = "Alibaba"
 
 
 def main():
-    dataset_name = BACKBLAZE
+    dataset_name = ALIBABA
     if dataset_name == BACKBLAZE:
         DATASET_PATH_DISK = "./disk_2015_complete.csv"
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'b')
