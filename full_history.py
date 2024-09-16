@@ -268,10 +268,10 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
                      'Drifts_Detected', 'Drift_Detection_Total_Time', 'Distribution_Extraction_Time', 'Statistical_Test_Time', 'Label_Costs', 
                      'Energy_Consumed_Hyperparameter', 'Emissions_Hyperparameter', 'CPU_Energy_Hyperparameter', 'GPU_Energy_Hyperparameter', 'RAM_Energy_Hyperparameter', 'Duration_Tracker_Hyperparameter', 
                      'Energy_Consumed_Fitting','Emissions_Fitting', 'CPU_Energy_Fitting', 'GPU_Energy_Fitting', 'RAM_Energy_Fitting', 'Duration_Tracker_Fitting', 
-                     'Energy_Consumed_Testing', 'Emissions_Testing', 'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing'
+                     'Energy_Consumed_Testing', 'Emissions_Testing', 'CPU_Energy_Testing', 'GPU_Energy_Testing', 'RAM_Energy_Testing', 'Duration_Tracker_Testing',
                      'Energy_Consumed_Distribution_Extraction', 'Emissions_Distribution_Extraction', 'CPU_Energy_Distribution_Extraction', 'GPU_Energy_Distribution_Extraction', 'RAM_Energy_Distribution_Extraction', 'Duration_Tracker_Distribution_Extraction',
                      'Energy_Consumed_Stats_Test', 'Emissions_Stats_Test', 'CPU_Energy_Stats_Test', 'GPU_Energy_Stats_Test', 'RAM_Energy_Stats_Test', 'Duration_Tracker_Stats_Test'
-                     ]
+                    ]
     values = [random_seed, type_retraining_data+"_"+detection, str(no_necessary_retrainings)+'/'+str(len(detected_drifts)), partial_roc_auc_ks_all_model, 
               np.mean(partial_roc_auc_ks_all_model), roc_auc_score(true_testing_labels, predictions_test_ks_all_model), 
               predictions_test_ks_all_model, true_testing_labels, total_train_fh_all, total_hyperparam_fh_ks_all, 
@@ -281,7 +281,8 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed, 
               total_fit_tracker_values['energy_consumed'], total_fit_tracker_values['emissions'], total_fit_tracker_values['cpu'], total_fit_tracker_values['gpu'], total_fit_tracker_values['ram'], total_fit_tracker_values['duration'], 
               total_testing_tracker_values['energy_consumed'], total_testing_tracker_values['emissions'], total_testing_tracker_values['cpu'], total_testing_tracker_values['gpu'], total_testing_tracker_values['ram'], total_testing_tracker_values['duration'],
               total_distribution_tracker_values['energy_consumed'], total_distribution_tracker_values['emissions'], total_distribution_tracker_values['cpu'], total_distribution_tracker_values['gpu'], total_distribution_tracker_values['ram'], total_distribution_tracker_values['duration'],
-              total_stats_tracker_values['energy_consumed'], total_stats_tracker_values['emissions'], total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration']]
+              total_stats_tracker_values['energy_consumed'], total_stats_tracker_values['emissions'], total_stats_tracker_values['cpu'], total_stats_tracker_values['gpu'], total_stats_tracker_values['ram'], total_stats_tracker_values['duration']
+            ]
     
     df_results_for_seed = format_data_for_the_seed(columns_names, values)
     store_into_file('./results/Output_' + str(experiment_name) + ".csv", df_results_for_seed)
