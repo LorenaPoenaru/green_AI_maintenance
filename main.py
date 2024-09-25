@@ -11,7 +11,7 @@ ALIBABA = "Alibaba"
 
 
 def main():
-    dataset_name = ALIBABA
+    dataset_name = GOOGLE
     if dataset_name == BACKBLAZE:
         DATASET_PATH_DISK = "./disk_2015_complete.csv"
         feature_list, label_list = features_labels_preprocessing(DATASET_PATH_DISK, 'b')
@@ -53,14 +53,15 @@ def main():
             }
 
     N_WORKERS = 1
-    TOTAL_NUMBER_SEEDS = 30
-    random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
+    TOTAL_NUMBER_SEEDS = 20
+    COUNT_SEED = 30
+    random_seeds = list(np.arange(COUNT_SEED))
     N_ITER_SEARCH = 100
 
     configurations =  [("FullHistory", "Periodic"), ("FullHistory", "KS-ALL"), ("FullHistory", "KS-PCA"), ("FullHistory", "KS-FI"), ("SlidingWindow","Static"), ("SlidingWindow","Periodic"), ("SlidingWindow","KS-ALL"), ("SlidingWindow","KS-PCA"),("SlidingWindow","KS-FI")]
     counter = {}
     for configuration in configurations:
-        counter[configuration] = TOTAL_NUMBER_SEEDS
+        counter[configuration] = COUNT_SEED
     executions = configurations * TOTAL_NUMBER_SEEDS
     random.shuffle(executions)
     print(executions)
