@@ -56,7 +56,7 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features, len(training_features))
+        #print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
         training_features_model = update_scaler.fit_transform(training_features)
@@ -65,12 +65,12 @@ def pipeline_periodic_model(dataset_name, type_retraining_data, detection, rando
         # obtain testing features and labels
         testing_features = feature_list[batch]
         testing_labels = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
+        #print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
         testing_features_model = update_scaler.transform(testing_features)
-        print("testing_features AFTER", testing_features, len(testing_features)) 
-        print("training_features AFTER", training_features, len(training_features))
+        #print("testing_features AFTER", testing_features, len(testing_features)) 
+        #print("training_features AFTER", training_features, len(training_features))
         #print("testing_labels",testing_labels, len(testing_labels))
 
 
@@ -249,7 +249,7 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features, len(training_features))
+        #print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
         training_features_model = update_scaler.fit_transform(training_features)
@@ -258,12 +258,12 @@ def pipeline_ks_all(dataset_name, type_retraining_data, detection, random_seed,f
         # obtain testing features and labels
         testing_features = feature_list[batch]
         testing_labels = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
+        #print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
         testing_features_model = update_scaler.transform(testing_features)
-        print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
-        print("training_features AFTER", training_features_model, len(training_features_model))
+        #print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
+        #print("training_features AFTER", training_features_model, len(training_features_model))
         #print("testing_labels",testing_labels, len(testing_labels))
 
         # Downscaling for data training
@@ -386,11 +386,11 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
             training_features = training_features_init
             training_labels = training_labels_init
             current_training_batches_list = initial_training_batches_list.copy()
-            print('Initial Training Batches', current_training_batches_list)
+            #print('Initial Training Batches', current_training_batches_list)
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features, len(training_features))
+        #print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
         training_features_model = update_scaler.fit_transform(training_features)
@@ -399,12 +399,12 @@ def pipeline_ks_pca(dataset_name, type_retraining_data, detection, random_seed,f
         # obtain testing features and labels
         testing_features = feature_list[batch]
         testing_labels = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
+        #print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
         testing_features_model = update_scaler.transform(testing_features)
-        print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
-        print("training_features AFTER", training_features_model, len(training_features_model))
+        #print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
+        #print("training_features AFTER", training_features_model, len(training_features_model))
         #print("testing_labels",testing_labels, len(testing_labels))
         # Downscaling for data training
         if dataset_name != ALIBABA:
@@ -548,11 +548,11 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
             training_features = training_features_init
             training_labels = training_labels_init
             current_training_batches_list = initial_training_batches_list.copy()
-            print('Initial Training Batches', current_training_batches_list)
+            #print('Initial Training Batches', current_training_batches_list)
         
 
         print("BATCH", batch)
-        print("training_features BEFORE SCALING", training_features, len(training_features))
+        #print("training_features BEFORE SCALING", training_features, len(training_features))
         # scaler for training data
         update_scaler = StandardScaler()
         training_features_model = update_scaler.fit_transform(training_features)
@@ -561,12 +561,12 @@ def pipeline_ks_fi(features_disk_failure, dataset_name, type_retraining_data, de
         # obtain testing features and labels
         testing_features = feature_list[batch]
         testing_labels = label_list[batch]
-        print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
+        #print("testing_features BEFORE SCALING", testing_features, len(testing_features)) 
         
         # scaling testing features
         testing_features_model = update_scaler.transform(testing_features)
-        print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
-        print("training_features AFTER", training_features_model, len(training_features_model))
+        #print("testing_features AFTER", testing_features_model, len(testing_features_model)) 
+        #print("training_features AFTER", training_features_model, len(training_features_model))
         #print("testing_labels",testing_labels, len(testing_labels))
         # Downscaling for data training
         if dataset_name != ALIBABA:
