@@ -53,7 +53,7 @@ def main():
             }
 
     N_WORKERS = 1
-    TOTAL_NUMBER_SEEDS = 5
+    TOTAL_NUMBER_SEEDS = 30
     #COUNT_SEED = 30
     random_seeds = list(np.arange(TOTAL_NUMBER_SEEDS))
     N_ITER_SEARCH = 100
